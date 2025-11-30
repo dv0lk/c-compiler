@@ -1,3 +1,4 @@
+```
 This graph showcases the path we take to go from a source file containing code to actually running that code on a computer
 
  Source    Tokens      AST        IR        Optimized IR    Assembly    Binary
@@ -20,3 +21,8 @@ IR Generator - Converts the AST into Intermediate Representation, a simple and p
 Optimizer - Applies transformation passes to improve the performance of the code, such as removing useless instructions
 
 Code Generator -> Emits actual x86 instructions or instructions for any other platform.
+```
+
+<video width="50%" src="https://github.com/user-attachments/assets/65b3bd72-d6c1-4334-b792-60c3934c6500">
+</video>
+
