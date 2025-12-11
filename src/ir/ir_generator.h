@@ -2,20 +2,21 @@
 #include <print>
 #include <vector>
 
-#include "base/ir_basic_block.hpp"
+#include "types/basic_block.hpp"
 
 #include "scope/resolver.hpp"
-#include "base/ir_types.hpp"
-#include "parser/ast/ast.hpp"
+#include "ir.hpp"
+#include "parser/ast.hpp"
+// #include "../parser/ast.hpp"
 
 namespace compiler::ir {
     class ir_generator {
     public:
-        std::vector<ir_basic_block> generate(const std::vector<ast::stmt_ptr> &ast);
+        std::vector<basic_block> generate(const std::vector<ast::stmt_ptr> &ast);
 
     private:
-        std::vector<ir_basic_block> blocks;
-        ir_basic_block current_block{"entry"};
+        std::vector<basic_block> blocks;
+        basic_block current_block{"entry"};
         Resolver resolver;
         int temp_var_counter = 0;
 

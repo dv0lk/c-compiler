@@ -12,7 +12,7 @@ add_executable(compiler-rewrite src/main.cpp
         src/lexer/Token.h
         src/parser/Parser.cpp
         src/parser/Parser.h
-        src/ir/base/ir_instruction.hpp
+        src/ir/types/instruction.hpp
         src/Ir/ir_printer.h
         src/ir/ir_generator.cpp
         src/ir/ir_generator.h
@@ -31,13 +31,13 @@ add_executable(compiler-rewrite src/main.cpp
         src/compiler/compiler.cpp
         src/compiler/compiler.hpp
         src/codegen/register.hpp
-        src/ir/base/ir_types.hpp
-        src/ir/base/ir_basic_block.hpp
-        src/ir/base/ir_basic_block.hpp
-        src/ir/base/ir_value.hpp
-        src/parser/ast/ast.hpp
+        src/ir/types/basic_block.hpp
+        src/ir/types/basic_block.hpp
+        src/ir/types/ir_value.hpp
+        src/parser/ast.hpp
         src/parser/ast/expr.hpp
         src/parser/ast/stmt.hpp
+        src/ir/ir.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

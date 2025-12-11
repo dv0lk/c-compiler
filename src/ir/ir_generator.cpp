@@ -2,8 +2,8 @@
 
 //TODO start_new_block
 namespace compiler::ir {
-    std::vector<ir_basic_block> ir_generator::generate(const std::vector<ast::stmt_ptr> &ast) {
-        current_block = ir_basic_block("entry");
+    std::vector<basic_block> ir_generator::generate(const std::vector<ast::stmt_ptr> &ast) {
+        current_block = basic_block("entry");
 
         for (const auto &stmt: ast) {
             process_stmt(stmt);
@@ -50,7 +50,7 @@ namespace compiler::ir {
 
     void ir_generator::process_stmt(const ast::return_stmt &ret) {
         const ir_value return_value = process_expr(ret.value);
-        current_block.add_instruction(ir_return{return_value});
+        current_block.add_instruction(return_{return_value});
     }
 
     void ir_generator::process_stmt(const ast::expression_stmt &stmt) {
@@ -75,17 +75,17 @@ namespace compiler::ir {
         const std::string else_label = get_label("else");
         const std::string end_label = get_label("end");
         const ir_value condition = process_expr(stmt.condition);
-        current_block.add_instruction(ir_jump_if_zero{condition, else_label});
+        current_block.add_instruction(jump_if_zero{condition, else_label});
 
         process_stmt(stmt.then_branch);
 
         if (stmt.else_branch.has_value()) {
-            current_block.add_instruction(ir_jump{end_label});
-            current_block.add_instruction(ir_label{else_label});
+            current_block.add_instruction(jump{end_label});
+            current_block.add_instruction(label{else_label});
             process_stmt(stmt.else_branch.value());
-            current_block.add_instruction(ir_label{end_label});
+            current_block.add_instruction(label{end_label});
         } else {
-            current_block.add_instruction(ir_label{else_label});
+            current_block.add_instruction(label{else_label});
         }
     }
 
@@ -94,21 +94,21 @@ namespace compiler::ir {
         const std::string body_label = get_label("while_body");
         const std::string end_label = get_label("while_end");
 
-        current_block.add_instruction(ir_jump{cond_label});
+        current_block.add_instruction(jump{cond_label});
         blocks.push_back(current_block);
 
-        current_block = ir_basic_block{cond_label};
+        current_block = basic_block{cond_label};
         const ir_value condition = process_expr(stmt.condition);
-        current_block.add_instruction(ir_jump_if_zero{condition, end_label});
-        current_block.add_instruction(ir_jump{body_label});
+        current_block.add_instruction(jump_if_zero{condition, end_label});
+        current_block.add_instruction(jump{body_label});
         blocks.push_back(current_block);
 
-        current_block = ir_basic_block{body_label};
+        current_block = basic_block{body_label};
         process_stmt(stmt.body);
-        current_block.add_instruction(ir_jump{cond_label});
+        current_block.add_instruction(jump{cond_label});
         blocks.push_back(current_block);
 
-        current_block = ir_basic_block{end_label};
+        current_block = basic_block{end_label};
     }
 
     ir_value ir_generator::process_expr(const ast::literal_expr &literal) {
@@ -130,7 +130,7 @@ namespace compiler::ir {
         const ir_value right = process_expr(expr.right);
         ir_value result{generate_temp()};
 
-        current_block.add_instruction(ir_binary{expr.op, left, right, result});
+        current_block.add_instruction(binary{expr.op, left, right, result});
         return result;
     }
 
@@ -138,7 +138,7 @@ namespace compiler::ir {
         const ir_value operand = process_expr(expr.value);
         ir_value result{generate_temp()};
 
-        current_block.add_instruction(ir_unary{expr.op, operand, result});
+        current_block.add_instruction(unary{expr.op, operand, result});
         return result;
     }
 
@@ -153,7 +153,7 @@ namespace compiler::ir {
             throw std::runtime_error("Undefined variable assignment");
 
         ir_value destination{expr.name + "_" + std::to_string(resolved.value())};
-        current_block.add_instruction(ir_copy{destination, value});
+        current_block.add_instruction(copy{destination, value});
         return destination;
     }
 
@@ -165,34 +165,34 @@ namespace compiler::ir {
         ir_value result{generate_temp()};
 
         if (expr.op == token_t::LogicalAnd) {
-            current_block.add_instruction(ir_jump_if_zero{left, short_circuit_label});
+            current_block.add_instruction(jump_if_zero{left, short_circuit_label});
 
             ir_value right = process_expr(expr.right);
-            current_block.add_instruction(ir_copy{result, right});
-            current_block.add_instruction(ir_jump{end_label});
+            current_block.add_instruction(copy{result, right});
+            current_block.add_instruction(jump{end_label});
 
-            ir_basic_block short_circuit{short_circuit_label};
+            basic_block short_circuit{short_circuit_label};
             blocks.push_back(current_block);
             current_block = short_circuit;
-            current_block.add_instruction(ir_copy{result, ir_value(0)});
+            current_block.add_instruction(copy{result, ir_value(0)});
             blocks.push_back(std::move(current_block));
 
-            current_block = ir_basic_block{end_label};
+            current_block = basic_block{end_label};
         } else if (expr.op == token_t::LogicalOr) {
-            current_block.add_instruction(ir_jump_if_not_zero{left, short_circuit_label});
+            current_block.add_instruction(jump_if_not_zero{left, short_circuit_label});
 
             const ir_value right = process_expr(expr.right);
-            current_block.add_instruction(ir_copy{result, right});
-            current_block.add_instruction(ir_jump{end_label});
+            current_block.add_instruction(copy{result, right});
+            current_block.add_instruction(jump{end_label});
 
-            ir_basic_block short_circuit{short_circuit_label};
+            basic_block short_circuit{short_circuit_label};
             blocks.push_back(current_block);
             current_block = short_circuit;
 
-            current_block.add_instruction(ir_copy{result, ir_value(1)});
+            current_block.add_instruction(copy{result, ir_value(1)});
             blocks.push_back(std::move(current_block));
 
-            current_block = ir_basic_block{end_label};
+            current_block = basic_block{end_label};
         }
 
         return result;
@@ -226,12 +226,12 @@ namespace compiler::ir {
             blocks.push_back(current_block);
         }
 
-        current_block = ir_basic_block(func.function_name + "_entry");
+        current_block = basic_block(func.function_name + "_entry");
         process_stmt(func.body);
 
         blocks.push_back(current_block);
         resolver.end_scope();
-        current_block = ir_basic_block("entry");
+        current_block = basic_block("entry");
     }
 
     void ir_generator::process_stmt(const ast::variable_stmt &variable) {
@@ -240,7 +240,7 @@ namespace compiler::ir {
         if (variable.initializer.has_value()) {
             const auto rhs = process_expr(variable.initializer.value());
             const auto lhs = ir_value{variable.name + "_" + std::to_string(scope_id.value())};
-            current_block.add_instruction(ir_copy{lhs, rhs});
+            current_block.add_instruction(copy{lhs, rhs});
         } else {
             throw std::runtime_error("Not implemented?");
             // current_block.add_instruction(ir_value{stmt.name}):

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "ast/ast.hpp"
+#include "ast.hpp"
 
 #include "lexer/lexer.h"
 
