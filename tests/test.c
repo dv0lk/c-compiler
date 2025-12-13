@@ -1,8 +1,12 @@
 
 int main(){
-    int y = 50 + 50;
-    int x = 100;
-    int z = y - x;
+    int x = 1;
+    if (x == 1) {
+        return 1;
+    } else {
+        x = 2;
+    }
 
-    return 1;
+    return x;
+
 }

@@ -11,7 +11,6 @@ int main() {
         throw std::runtime_error("Failed to read file");
 
     const std::string source = {file->begin(), file->end()};
-    std::print("1");
     compiler::Compiler compiler;
     compiler.compile(source);
 }

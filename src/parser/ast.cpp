@@ -1,10 +1,10 @@
-#include "parser.h"
+#include "ast.h"
 
 #include <stdexcept>
 
-namespace compiler::parser {
-    std::vector<ast::stmt_ptr> parser::parse_ast(std::vector<token> &tokens) {
-        //TODO uhh, should we do this? maybe there is like some view thingy we can use
+namespace compiler::ast {
+    std::vector<stmt::stmt_ptr> parser::parse_ast(std::vector<token> &tokens) {
+        //TODO fix this
         this->tokens = tokens;
         while (!is_end()) {
             this->statements.emplace_back(parse_declaration_statement());
@@ -67,12 +67,12 @@ namespace compiler::parser {
         return expression;
     }
 
-    ast::expr_ptr parser::parse_logical_or_expr() {
+    expr_ptr parser::parse_logical_or_expr() {
         auto expression = parse_logical_and_expr();
         while (match(token_t::LogicalOr)) {
             auto op = previous().get_type();
             auto right = parse_logical_and_expr();
-            expression = ast::make_expr<ast::logical_expr>(expression, op, right);
+            expression = make_expr<logical_expr>(expression, op, right);
         }
         return expression;
     }
@@ -98,17 +98,17 @@ namespace compiler::parser {
         return expression;
     }
 
-    ast::expr_ptr parser::parse_comparison_expr() {
+    expr_ptr parser::parse_comparison_expr() {
         auto expression = parse_additive_expr();
         while (match(token_t::Less, token_t::LessEqual, token_t::Greater, token_t::GreaterEqual)) {
             auto op = previous().get_type();
             auto right = parse_additive_expr();
-            expression = ast::make_expr<ast::binary_expr>(expression, op, right);
+            expression = ast::make_expr<binary_expr>(expression, op, right);
         }
         return expression;
     }
 
-    ast::expr_ptr parser::parse_additive_expr() {
+    expr_ptr parser::parse_additive_expr() {
         auto expression = parse_multiplicative_expr();
         while (match(token_t::Plus, token_t::Minus)) {
             auto op = previous().get_type();
@@ -118,7 +118,7 @@ namespace compiler::parser {
         return expression;
     }
 
-    ast::expr_ptr parser::parse_multiplicative_expr() {
+    expr_ptr parser::parse_multiplicative_expr() {
         auto expression = parse_unary_expr();
         while (match(token_t::Star, token_t::Slash)) {
             auto op = previous().get_type();
@@ -128,7 +128,7 @@ namespace compiler::parser {
         return expression;
     }
 
-    ast::expr_ptr parser::parse_unary_expr() {
+    expr_ptr parser::parse_unary_expr() {
         if (match(token_t::Tilde, token_t::Minus, token_t::Not)) {
             auto op = previous().get_type();
             auto right = parse_unary_expr();
@@ -137,7 +137,7 @@ namespace compiler::parser {
         return parse_primary_expr();
     }
 
-    ast::expr_ptr parser::parse_primary_expr() {
+    expr_ptr parser::parse_primary_expr() {
         if (match(token_t::IntLiteral, token_t::StringLiteral, token_t::DoubleLiteral)) {
             return ast::make_expr<ast::literal_expr>(*previous().get_literal());
         }
@@ -171,7 +171,7 @@ namespace compiler::parser {
         return ast::make_expr<ast::call_expr>(name, arguments);
     }
 
-    ast::stmt_ptr parser::parse_statement() {
+    stmt::stmt_ptr parser::parse_statement() {
         if (match(token_t::If)) {
             return parse_if_statement();
         }
@@ -191,7 +191,7 @@ namespace compiler::parser {
         return parse_expression_statement();
     }
 
-    ast::stmt_ptr parser::parse_declaration_statement() {
+    stmt::stmt_ptr parser::parse_declaration_statement() {
         if (match(token_t::Int, token_t::Char, token_t::Void, token_t::Double)) {
             auto next_token = peek_next();
 
@@ -210,7 +210,7 @@ namespace compiler::parser {
     }
 
     //todo add support for multiple types
-    ast::stmt_ptr parser::parse_variable_declaration_statement() {
+    stmt::stmt_ptr parser::parse_variable_declaration_statement() {
         std::string variable_name = consume(token_t::Identifier, "Expected identifier after type").get_lexeme();
 
         std::optional<ast::expr_ptr> initializer;
@@ -219,15 +219,15 @@ namespace compiler::parser {
         }
         consume(token_t::Semicolon, "Expected ';' after variable declaration");
 
-        return ast::make_stmt<ast::variable_stmt>(variable_name, initializer);
+        return stmt::make_stmt<stmt::variable>(variable_name, initializer);
     }
 
-    ast::stmt_ptr parser::parse_function_declaration_statement() {
+    stmt::stmt_ptr parser::parse_function_declaration_statement() {
         auto return_type = previous().get_type();
         auto function_name = consume(token_t::Identifier, "Expected function name after type").get_lexeme();
         consume(token_t::LeftParen, "Expected '(' after function name");
 
-        std::vector<ast::function_param_stmt> params;
+        std::vector<stmt::function_param> params;
         if (!check(token_t::RightParen)) {
             do {
                 //todo currently support only int
@@ -242,51 +242,51 @@ namespace compiler::parser {
 
         auto body = parse_block_statement();
 
-        return ast::make_stmt<ast::function_decl_stmt>(return_type, function_name, params, body);
+        return stmt::make_stmt<stmt::function_decl>(return_type, function_name, params, body);
     }
 
-    ast::stmt_ptr parser::parse_if_statement() {
+    stmt::stmt_ptr parser::parse_if_statement() {
         consume(token_t::LeftParen, "Expected '(' after if");
         auto condition = parse_expression();
         consume(token_t::RightParen, "Expected ')' after if condition");
         auto then_branch = parse_statement();
 
-        std::optional<ast::stmt_ptr> else_branch;
+        std::optional<stmt::stmt_ptr> else_branch;
         if (match(token_t::Else)) {
             else_branch = parse_statement();
         }
 
-        return ast::make_stmt<ast::if_stmt>(condition, then_branch, else_branch);
+        return stmt::make_stmt<stmt::if_>(condition, then_branch, else_branch);
     }
 
-    ast::stmt_ptr parser::parse_block_statement() {
-        std::vector<ast::stmt_ptr> statements;
+    stmt::stmt_ptr parser::parse_block_statement() {
+        std::vector<stmt::stmt_ptr> statements;
 
         while (!check(token_t::RightBrace) && !is_end()) {
             statements.emplace_back(parse_declaration_statement());
         }
         consume(token_t::RightBrace, "Expected '}' after block");
 
-        return ast::make_stmt<ast::block_stmt>(statements);
+        return stmt::make_stmt<stmt::block>(statements);
     }
 
-    ast::stmt_ptr parser::parse_while_statement() {
+    stmt::stmt_ptr parser::parse_while_statement() {
         consume(token_t::LeftParen, "Expected '(' after while");
         auto condition = parse_expression();
         consume(token_t::RightParen, "Expected ')' after while condition");
         auto body = parse_statement();
-        return ast::make_stmt<ast::while_stmt>(condition, body);
+        return stmt::make_stmt<stmt::while_>(condition, body);
     }
 
-    ast::stmt_ptr parser::parse_expression_statement() {
-        auto expression = ast::make_stmt<ast::expression_stmt>(parse_expression());
+    stmt::stmt_ptr parser::parse_expression_statement() {
+        auto expression = stmt::make_stmt<stmt::expression>(parse_expression());
         consume(token_t::Semicolon, "Expected ';' after expression");
         return expression;
     }
 
-    ast::stmt_ptr parser::parse_return_statement() {
+    stmt::stmt_ptr parser::parse_return_statement() {
         auto expression = parse_expression();
-        auto return_stmt = ast::make_stmt<ast::return_stmt>(expression);
+        auto return_stmt = stmt::make_stmt<stmt::return_>(expression);
         consume(token_t::Semicolon, "Expected ';' after return statement");
         return return_stmt;
     }

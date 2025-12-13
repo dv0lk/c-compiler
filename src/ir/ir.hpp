@@ -1,4 +1,4 @@
 #pragma once
-#include "types/basic_block.hpp"
+#include "types/basic_block_t.hpp"
 #include "types/instruction.hpp"
-#include "types/ir_value.hpp"
+#include "types/value_t.hpp"

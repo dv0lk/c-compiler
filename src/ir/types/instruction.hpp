@@ -4,29 +4,29 @@
 #include <variant>
 #include <vector>
 #include "lexer/token.h"
-#include "ir_value.hpp"
+#include "value_t.hpp"
 
 namespace compiler::ir {
     struct return_ {
-        ir_value value;
+        value_t value;
     };
 
     struct binary {
         token_t op;
-        ir_value left;
-        ir_value right;
-        ir_value result;
+        value_t left;
+        value_t right;
+        value_t result;
     };
 
     struct unary {
         token_t op;
-        ir_value value;
-        ir_value result;
+        value_t value;
+        value_t result;
     };
 
     struct copy {
-        ir_value destination;
-        ir_value source;
+        value_t destination;
+        value_t source;
 
         friend bool operator==(const copy &lhs, const copy &rhs) {
             return lhs.destination == rhs.destination
@@ -43,26 +43,26 @@ namespace compiler::ir {
     };
 
     struct jump_if_zero {
-        ir_value condition;
+        value_t condition;
         label target_label;
     };
 
     struct jump_if_not_zero {
-        ir_value condition;
+        value_t condition;
         label target_label;
     };
 
-    struct ir_call {
+    struct func_call {
         std::string function_name;
-        std::vector<ir_value> arguments;
-        ir_value destination;
+        std::vector<value_t> arguments;
+        value_t destination;
     };
 
 
     class instruction {
     private:
         using variant_t = std::variant<return_, binary, unary, copy, label, jump, jump_if_zero,
-            jump_if_not_zero, ir_call>;
+            jump_if_not_zero, func_call>;
 
         variant_t data_;
 

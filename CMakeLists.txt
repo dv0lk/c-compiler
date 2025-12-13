@@ -10,17 +10,17 @@ add_executable(compiler-rewrite src/main.cpp
         src/lexer/Lexer.cpp
         src/lexer/Lexer.h
         src/lexer/Token.h
-        src/parser/Parser.cpp
-        src/parser/Parser.h
+        src/parser/ast.cpp
+        src/parser/ast.h
         src/ir/types/instruction.hpp
-        src/Ir/ir_printer.h
-        src/ir/ir_generator.cpp
-        src/ir/ir_generator.h
+        src/ir/printer.h
+        src/ir/generator.cpp
+        src/ir/generator.h
         src/scope/resolver.hpp
         src/optimizations/optimizer.hpp
         src/optimizations/passes/constant_folding.hpp
         src/optimizations/passes/constant_folding.cpp
-        src/flow_graph/flow_graph.hpp
+        src/flow_graph/cfg.hpp
         src/optimizations/passes/unreachable_code_elem.cpp
         src/optimizations/passes/unreachable_code_elem.hpp
         src/optimizations/passes/copy_propagation.hpp
@@ -31,13 +31,14 @@ add_executable(compiler-rewrite src/main.cpp
         src/compiler/compiler.cpp
         src/compiler/compiler.hpp
         src/codegen/register.hpp
-        src/ir/types/basic_block.hpp
-        src/ir/types/basic_block.hpp
-        src/ir/types/ir_value.hpp
+        src/ir/types/basic_block_t.hpp
+        src/ir/types/basic_block_t.hpp
+        src/ir/types/value_t.hpp
         src/parser/ast.hpp
         src/parser/ast/expr.hpp
         src/parser/ast/stmt.hpp
         src/ir/ir.hpp
+        src/flow_graph/adapter/ir_adapter.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

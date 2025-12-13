@@ -1,9 +1,117 @@
-// #pragma once
-// #include <concepts>
-// #include <vector>
-// #include "codegen/x86_instructions.hpp"
-// #include "ir/ir.h"
-//
+#pragma once
+
+#include <memory>
+#include <vector>
+
+#include "adapter/ir_adapter.hpp"
+#include "ir/ir.hpp"
+
+namespace compiler::cfg {
+    template<typename InstructionType>
+    struct basic_block_t {
+        std::vector<std::shared_ptr<InstructionType> > instructions;
+
+        std::vector<std::shared_ptr<basic_block_t> > successors;
+        std::vector<std::shared_ptr<basic_block_t> > predecessors;
+
+        basic_block_t() = default;
+
+        explicit basic_block_t(const std::vector<std::shared_ptr<InstructionType> > &instructions)
+            : instructions(instructions) {
+        }
+
+        void push_successor(const std::shared_ptr<basic_block_t> &value) {
+            if (std::ranges::find(successors, value) != successors.end()) {
+                return;
+            }
+            successors.emplace_back(value);
+        }
+
+        void push_predecessor(const std::shared_ptr<basic_block_t> &value) {
+            if (std::ranges::find(predecessors, value) != predecessors.end()) {
+                return;
+            }
+            predecessors.emplace_back(value);
+        }
+
+        void push_instr(const std::shared_ptr<InstructionType> &instruction) {
+            instructions.emplace_back(instruction);
+        }
+
+        void clear() {
+            instructions.clear();
+            successors.clear();
+            predecessors.clear();
+        }
+
+        [[nodiscard]] bool empty() const {
+            return instructions.empty();
+        }
+    };
+
+    template<typename InstrType>
+    class cfg {
+    private:
+        using bb_t = basic_block_t<InstrType>;
+
+        instruction_adapter<InstrType> adapter;
+        std::vector<std::shared_ptr<bb_t> > basic_blocks;
+        std::unordered_map<std::string, bb_t> label_cache;
+
+    public:
+        void generate_cfg(const std::vector<InstrType> &instructions) {
+            auto bbs = partition_to_bb(instructions);
+            basic_blocks.clear();
+        }
+
+        std::vector<bb_t> partition_to_bb(const std::vector<InstrType> &instructions) {
+            std::vector<bb_t> finished_blocks;
+            bb_t current_block;
+
+            //TODO add comments
+            for (const auto &instruction: instructions) {
+                if (adapter.is_block_starter(instruction)) {
+                    if (!current_block.empty()) {
+                        finished_blocks.emplace_back(current_block);
+                    }
+
+                    current_block.clear();
+                    current_block.push_instr(instruction);
+                    continue;
+                }
+
+                if (adapter.is_block_terminator(instruction)) {
+                    current_block.push_instr(instruction);
+                    finished_blocks.emplace_back(current_block);
+                    current_block.clear();
+                    continue;
+                }
+
+                current_block.push_instr(instruction);
+            }
+
+            if (!current_block.empty()) {
+                finished_blocks.emplace_back(current_block);
+            }
+
+            return finished_blocks;
+        }
+
+        void build_label_cache() {
+            for (const auto &bb: basic_blocks) {
+                if (bb->empty()) {
+                    const auto instruction = bb->instructions.front();
+                    if (adapter.is_label(*instruction)) {
+                        auto name = adapter.get_label_name(instruction);
+                        label_cache[name] = bb;
+                    }
+                }
+            }
+        }
+    };
+}
+
+
 // namespace compiler {
 //     enum node_type {
 //         EXIT = -1,
@@ -332,4 +440,4 @@
 //
 //     };
 // }
-//
+

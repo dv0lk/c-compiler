@@ -1,10 +1,10 @@
 #pragma once
-#include "flow_graph/flow_graph.hpp"
+#include "flow_graph/cfg.hpp"
 
 namespace compiler {
     class UnreachableCode {
     public:
-        using FlowGraphType = FlowGraph<ir::ir_instruction>;
+        using FlowGraphType = CFG<ir::ir_instruction>;
 
         bool apply(FlowGraphType& flow_graph);
 
