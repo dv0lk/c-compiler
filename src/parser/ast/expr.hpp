@@ -6,7 +6,7 @@
 
 #include "lexer/token.h"
 
-namespace compiler::ast {
+namespace compiler::ast::expr {
     class expr;
     using expr_ptr = std::shared_ptr<expr>;
 
@@ -15,41 +15,41 @@ namespace compiler::ast {
         return std::make_shared<expr>(T{std::forward<Args>(args)...});
     }
 
-    struct literal_expr {
+    struct literal {
         int value;
     };
 
-    struct binary_expr {
+    struct binary {
         expr_ptr left;
         token_t op;
         expr_ptr right;
     };
 
-    struct unary_expr {
+    struct unary {
         token_t op;
         expr_ptr value;
     };
 
-    struct logical_expr {
+    struct logical {
         expr_ptr left;
         token_t op;
         expr_ptr right;
     };
 
-    struct grouping_expr {
+    struct grouping {
         expr_ptr expr;
     };
 
-    struct assignment_expr {
+    struct assignment {
         std::string name;
         expr_ptr value;
     };
 
-    struct variable_expr {
+    struct variable {
         std::string name;
     };
 
-    struct call_expr {
+    struct call {
         std::string identifier;
         std::vector<expr_ptr> arguments;
     };
@@ -57,8 +57,8 @@ namespace compiler::ast {
 
     class expr {
     private:
-        using variant_t = std::variant<literal_expr, binary_expr, grouping_expr, unary_expr, logical_expr, variable_expr
-            , assignment_expr, call_expr>;
+        using variant_t = std::variant<literal, binary, grouping, unary, logical, variable
+            , assignment, call>;
         variant_t data_;
 
     public:

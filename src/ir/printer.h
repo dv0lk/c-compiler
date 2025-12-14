@@ -25,7 +25,7 @@ namespace compiler::ir::printer {
         }
 
 
-        static std::string to_string(const std::vector<instruction> &instructions) {
+        static std::string to_string(const std::span<const instruction> &instructions) {
             std::stringstream ss;
             for (const auto &instruction: instructions) {
                 ss << " " << to_string(instruction) << "\n";
@@ -46,10 +46,7 @@ namespace compiler::ir::printer {
         };
 
         static std::string value_to_string(const value_t &value) {
-            if (value.is_constant())
-                return std::to_string(value.get<int>());
-
-            return value.get<std::string>();
+            return value.to_string();
         }
 
         static std::string to_string(const return_ &ret) {

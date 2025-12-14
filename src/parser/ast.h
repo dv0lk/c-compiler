@@ -43,28 +43,27 @@ namespace compiler::ast {
 
         token consume(token_t type, const std::string &error_message);
 
-        expr_ptr parse_expression();
+        expr::expr_ptr parse_expression();
 
-        expr_ptr parse_assignment_expr();
+        expr::expr_ptr parse_assignment_expr();
 
-        expr_ptr parse_logical_or_expr();
+        expr::expr_ptr parse_logical_or_expr();
 
-        expr_ptr parse_logical_and_expr();
+        expr::expr_ptr parse_logical_and_expr();
 
-        expr_ptr parse_equality_expr();
+        expr::expr_ptr parse_equality_expr();
 
-        expr_ptr parse_comparison_expr();
+        expr::expr_ptr parse_comparison_expr();
 
-        expr_ptr parse_additive_expr();
+        expr::expr_ptr parse_additive_expr();
 
-        expr_ptr parse_multiplicative_expr();
+        expr::expr_ptr parse_multiplicative_expr();
 
-        expr_ptr parse_unary_expr();
+        expr::expr_ptr parse_unary_expr();
 
-        expr_ptr parse_primary_expr();
+        expr::expr_ptr parse_primary_expr();
 
-        expr_ptr parse_call_expr(const std::string &name);
-
+        expr::expr_ptr parse_call_expr(const std::string &name);
 
         stmt::stmt_ptr parse_statement();
 

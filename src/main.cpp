@@ -2,6 +2,7 @@
 #include "util/files.h"
 #include <filesystem>
 #include <print>
+
 int main() {
     const auto project_path = std::filesystem::current_path().parent_path();
     const std::string path = (project_path / "tests" / "test.c").string();

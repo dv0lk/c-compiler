@@ -1,269 +1,242 @@
 #include "generator.h"
 
-//TODO start_new_block
+
+//TODO maybe the design should something like this:
+// we have a function add_instruction. And then this instruction decides if to start/terminate the block based on the current instruction
+// ????
 namespace compiler::ir {
     std::vector<basic_block_t> generator::generate(const std::vector<ast::stmt::stmt_ptr> &ast) {
-        curr_bb = basic_block_t("entry");
+        current_block_ = basic_block_t("entry");
 
         for (const auto &stmt: ast) {
-            process_stmt(stmt);
+            emit_stmt(stmt);
         }
 
-        if (!curr_bb.empty())
-            bbs.push_back(curr_bb);
+        finalize_current_block();
 
-        return bbs;
+        return blocks_;
+    }
+
+    void generator::finalize_current_block() {
+        if (!current_block_.empty()) {
+            blocks_.push_back(std::move(current_block_));
+        }
     }
 
     void generator::start_new_bb(std::string label) {
-        if (!curr_bb.empty()) {
-            bbs.emplace_back(curr_bb);
-        }
-        curr_bb = basic_block_t{std::move(label)};
+        finalize_current_block();
+        current_block_ = basic_block_t{std::move(label)};
     }
 
-    std::string generator::generate_tmp() {
-        return "t" + std::to_string(temp_var_counter++);
+    [[nodiscard]] std::string generator::make_tmp_var() {
+        return "t" + std::to_string(var_counter_++);
     }
 
-    std::string generator::get_label(const std::string &label) {
-        static int count = 0;
-        return label + "_" + std::to_string(count++);
+    [[nodiscard]] std::string generator::make_label(const std::string &label) {
+        return label + "_" + std::to_string(label_counter_++);
     }
 
-    void generator::process_stmt(const ast::stmt::stmt_ptr &stmt_var) {
-        return stmt_var->visit([this](const auto &stmt) {
-            return this->process_stmt(stmt);
+    [[nodiscard]] std::string generator::make_variable_name(const std::string &name, size_t scope_id) {
+        return name + "_" + std::to_string(scope_id);
+    }
+
+    void generator::emit_stmt(const ast::stmt::stmt_ptr &stmt_var) {
+        stmt_var->visit([this](const auto &stmt) {
+            emit_stmt(stmt);
         });
     }
 
-    value_t generator::process_expr(const ast::expr_ptr &expr_var) {
-        return expr_var->visit([this](const auto &expr) {
-            return this->process_expr(expr);
-        });
+    void generator::emit_stmt(const ast::stmt::return_ &ret) {
+        const auto ret_value = emit_expr(ret.value);
+        current_block_.append(return_{ret_value});
     }
 
-    void generator::process_stmt(const ast::stmt::return_ &ret) {
-        const value_t return_value = process_expr(ret.value);
-        curr_bb.push_instr(return_{return_value});
+    void generator::emit_stmt(const ast::stmt::expression &stmt) {
+        emit_expr(stmt.expr);
     }
 
-    void generator::process_stmt(const ast::stmt::expression &stmt) {
-        process_expr(stmt.expr);
-    }
-
-    void generator::process_stmt(const ast::stmt::block &block) {
-        resolver.begin_scope();
+    void generator::emit_stmt(const ast::stmt::block &block) {
+        resolver_.begin_scope();
 
         if (block.statements.empty()) {
-            throw std::runtime_error("Empty block?");
+                        throw std::runtime_error("Cannot emit empty statement block");
         }
 
         for (const auto &s: block.statements) {
-            process_stmt(s);
+            emit_stmt(s);
         }
 
-        resolver.end_scope();
+        resolver_.end_scope();
     }
 
-    void generator::process_stmt(const ast::stmt::if_ &stmt) {
-        const std::string then_label = get_label("if_then");
-        const std::string end_label = get_label("if_end");
-        const std::string else_label = stmt.else_branch.has_value() ? get_label("if_else") : end_label;
+    void generator::emit_stmt(const ast::stmt::if_ &stmt) {
+        const std::string then_label = make_label("if_then");
+        const std::string end_label = make_label("if_end");
+        const std::string else_label = stmt.else_branch.has_value() ? make_label("if_else") : end_label;
 
-        const value_t cond = process_expr(stmt.condition);
+        const value_t cond = emit_expr(stmt.condition);
+        current_block_.append(jump_if_zero{cond, label{else_label}});
 
-        curr_bb.push_instr(jump_if_zero{cond, label{else_label}});
-        bbs.push_back(std::move(curr_bb));
+        start_new_bb(then_label);
 
-        curr_bb = basic_block_t{then_label};
-        process_stmt(stmt.then_branch);
-
-        // current_block.push_instr(jump{label{end_label}}); //???
-        bbs.push_back(std::move(curr_bb));
+        emit_stmt(stmt.then_branch);
 
         if (stmt.else_branch.has_value()) {
-            curr_bb = basic_block_t{else_label};
-            process_stmt(stmt.else_branch.value());
-            curr_bb.push_instr(jump{label{end_label}});
-            bbs.push_back(std::move(curr_bb));
+            start_new_bb(else_label);
+            emit_stmt(stmt.else_branch.value());
+            current_block_.append(jump{label{end_label}});
         }
-        curr_bb = basic_block_t{end_label};
-
-
-        // const std::string else_label = get_label("else");
-        // const std::string end_label = get_label("end");
-        // const value_t condition = process_expr(stmt.condition);
-        // current_block.push_instr(jump_if_zero{condition, else_label});
-        //
-        // process_stmt(stmt.then_branch);
-        //
-        // if (stmt.else_branch.has_value()) {
-        //     current_block.push_instr(jump{end_label});
-        //     current_block.push_instr(label{else_label});
-        //     process_stmt(stmt.else_branch.value());
-        //     current_block.push_instr(label{end_label});
-        // } else {
-        //     current_block.push_instr(label{else_label});
-        // }
+        start_new_bb(end_label);
     }
 
-    void generator::process_stmt(const ast::stmt::while_ &stmt) {
-        const std::string cond_label = get_label("while_cond");
-        const std::string body_label = get_label("while_body");
-        const std::string end_label = get_label("while_end");
+    void generator::emit_stmt(const ast::stmt::while_ &stmt) {
+        const std::string cond_label = make_label("while_cond");
+        const std::string body_label = make_label("while_body");
+        const std::string end_label = make_label("while_end");
 
-        curr_bb.push_instr(jump{cond_label});
-        bbs.push_back(curr_bb);
+        current_block_.append(jump{cond_label});
 
-        curr_bb = basic_block_t{cond_label};
+        start_new_bb(cond_label);
+        const value_t condition = emit_expr(stmt.condition);
+        current_block_.append(jump_if_zero{condition, end_label});
+        current_block_.append(jump{body_label});
 
-        const value_t condition = process_expr(stmt.condition);
-        curr_bb.push_instr(jump_if_zero{condition, end_label});
-        curr_bb.push_instr(jump{body_label});
-        bbs.push_back(curr_bb);
+        start_new_bb(body_label);
+        emit_stmt(stmt.body);
+        current_block_.append(jump{cond_label});
 
-        curr_bb = basic_block_t{body_label};
-        process_stmt(stmt.body);
-        curr_bb.push_instr(jump{cond_label});
-        bbs.push_back(curr_bb);
-
-        curr_bb = basic_block_t{end_label};
+        start_new_bb(end_label);
     }
 
-    value_t generator::process_expr(const ast::literal_expr &literal) {
-        return value_t(literal.value);
-    }
-
-    value_t generator::process_expr(const ast::variable_expr &variable) {
-        const auto resolved = resolver.resolve(variable.name);
-
-        if (!resolved.has_value())
-            throw std::runtime_error("Error resolving variable\n");
-
-        const std::string name = variable.name + "_" + std::to_string(resolved.value());
-        return value_t(name);
-    }
-
-    value_t generator::process_expr(const ast::binary_expr &expr) {
-        const value_t left = process_expr(expr.left);
-        const value_t right = process_expr(expr.right);
-        value_t result{generate_tmp()};
-
-        curr_bb.push_instr(binary{expr.op, left, right, result});
-        return result;
-    }
-
-    value_t generator::process_expr(const ast::unary_expr &expr) {
-        const value_t operand = process_expr(expr.value);
-        value_t result{generate_tmp()};
-
-        curr_bb.push_instr(unary{expr.op, operand, result});
-        return result;
-    }
-
-    value_t generator::process_expr(const ast::grouping_expr &expr) {
-        return process_expr(expr.expr);
-    }
-
-    value_t generator::process_expr(const ast::assignment_expr &expr) {
-        const value_t value = process_expr(expr.value);
-        const auto resolved = resolver.resolve(expr.name);
-        if (!resolved.has_value())
-            throw std::runtime_error("Undefined variable assignment");
-
-        value_t destination{expr.name + "_" + std::to_string(resolved.value())};
-        curr_bb.push_instr(copy{destination, value});
-        return destination;
-    }
-
-    value_t generator::process_expr(const ast::logical_expr &expr) {
-        const std::string short_circuit_label = get_label("short_circuit");
-        const std::string end_label = get_label("logical_end");
-
-        value_t left = process_expr(expr.left);
-        value_t result{generate_tmp()};
-
-        if (expr.op == token_t::LogicalAnd) {
-            curr_bb.push_instr(jump_if_zero{left, short_circuit_label});
-
-            value_t right = process_expr(expr.right);
-            curr_bb.push_instr(copy{result, right});
-            curr_bb.push_instr(jump{end_label});
-
-            basic_block_t short_circuit{short_circuit_label};
-            bbs.push_back(curr_bb);
-            curr_bb = short_circuit;
-            curr_bb.push_instr(copy{result, value_t(0)});
-            bbs.push_back(std::move(curr_bb));
-
-            curr_bb = basic_block_t{end_label};
-        } else if (expr.op == token_t::LogicalOr) {
-            curr_bb.push_instr(jump_if_not_zero{left, short_circuit_label});
-
-            const value_t right = process_expr(expr.right);
-            curr_bb.push_instr(copy{result, right});
-            curr_bb.push_instr(jump{end_label});
-
-            basic_block_t short_circuit{short_circuit_label};
-            bbs.push_back(curr_bb);
-            curr_bb = short_circuit;
-
-            curr_bb.push_instr(copy{result, value_t(1)});
-            bbs.push_back(std::move(curr_bb));
-
-            curr_bb = basic_block_t{end_label};
-        }
-
-        return result;
-    }
-
-    value_t generator::process_expr(const ast::call_expr &call) {
-        std::vector<value_t> arg_values;
-        for (const auto &arg: call.arguments) {
-            arg_values.push_back(process_expr(arg));
-        }
-
-        value_t result{generate_tmp()};
-
-        curr_bb.push_instr(func_call{call.identifier, arg_values, result});
-
-        return result;
-    }
-
-    void generator::process_stmt(const ast::stmt::function_param &stmt) {
+    void generator::emit_stmt(const ast::stmt::function_param &stmt) {
         throw std::runtime_error("Not implemented\n");
     }
 
-    void generator::process_stmt(const ast::stmt::function_decl &func) {
-        resolver.begin_scope();
+    void generator::emit_stmt(const ast::stmt::function_decl &func) {
+        resolver_.begin_scope();
 
-        for (const auto &param: func.params) {
-            resolver.declare(param.name);
+        for (const auto &[name, type]: func.params) {
+            resolver_.declare(name);
         }
 
-        if (!curr_bb.empty()) {
-            bbs.push_back(curr_bb);
-        }
+        start_new_bb(func.function_name + "_entry");
+        emit_stmt(func.body);
 
-        curr_bb = basic_block_t(func.function_name + "_entry");
-        process_stmt(func.body);
-
-        bbs.push_back(curr_bb);
-        resolver.end_scope();
-        curr_bb = basic_block_t("entry");
+        start_new_bb("entry");
+        resolver_.end_scope();
     }
 
-    void generator::process_stmt(const ast::stmt::variable &variable) {
-        const auto scope_id = resolver.declare(variable.name);
+    void generator::emit_stmt(const ast::stmt::variable &variable) {
+        const auto scope_id = resolver_.declare(variable.name);
 
         if (variable.initializer.has_value()) {
-            const auto rhs = process_expr(variable.initializer.value());
-            const auto lhs = value_t{variable.name + "_" + std::to_string(scope_id.value())};
-            curr_bb.push_instr(copy{lhs, rhs});
-        } else {
-            throw std::runtime_error("Not implemented?");
-            // current_block.add_instruction(ir_value{stmt.name}):
+            const auto rhs = emit_expr(variable.initializer.value());
+            const auto lhs = value_t{make_variable_name(variable.name, scope_id.value())};
+            current_block_.append(copy{lhs, rhs});
+            return;
         }
+
+        throw std::runtime_error("Something went wrong");
+    }
+
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::expr_ptr &expr_var) {
+        return expr_var->visit([this](const auto &stmt) {
+            return this->emit_expr(stmt);
+        });
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::literal &literal) {
+        return value_t(literal.value);
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::variable &variable) {
+        const auto resolved = resolver_.resolve(variable.name);
+
+        if (!resolved.has_value()) {
+            throw std::runtime_error("Error resolving variable");
+        }
+
+        return value_t(make_variable_name(variable.name, resolved.value()));
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::binary &expr) {
+        const value_t left = emit_expr(expr.left);
+        const value_t right = emit_expr(expr.right);
+        value_t result{make_tmp_var()};
+
+        current_block_.append(binary{expr.op, left, right, result});
+        return result;
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::unary &expr) {
+        const value_t operand = emit_expr(expr.value);
+        value_t result{make_tmp_var()};
+
+        current_block_.append(unary{expr.op, operand, result});
+        return result;
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::grouping &expr) {
+        return emit_expr(expr.expr);
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::assignment &expr) {
+        const value_t value = emit_expr(expr.value);
+        const auto resolved = resolver_.resolve(expr.name);
+
+        if (!resolved.has_value()) {
+            throw std::runtime_error("Undefined variable assignment");
+        }
+
+        value_t destination{make_variable_name(expr.name, resolved.value())};
+        current_block_.append(copy{destination, value});
+        return destination;
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::logical &expr) {
+        const std::string short_circuit_label = make_label("short_circuit");
+        const std::string end_label = make_label("logical_end");
+
+        value_t left = emit_expr(expr.left);
+        value_t result{make_tmp_var()};
+
+        if (expr.op == token_t::LogicalAnd) {
+            current_block_.append(jump_if_zero{left, short_circuit_label});
+
+            const value_t right = emit_expr(expr.right);
+            current_block_.append(copy{result, right});
+            current_block_.append(jump{end_label});
+
+            start_new_bb(short_circuit_label);
+            current_block_.append(copy{result, value_t(0)});
+
+            start_new_bb(end_label);
+        } else if (expr.op == token_t::LogicalOr) {
+            current_block_.append(jump_if_not_zero{left, short_circuit_label});
+
+            const value_t right = emit_expr(expr.right);
+            current_block_.append(copy{result, right});
+            current_block_.append(jump{end_label});
+
+            start_new_bb(short_circuit_label);
+            current_block_.append(copy{result, value_t(1)});
+
+            start_new_bb(end_label);
+        }
+
+        return result;
+    }
+
+    [[nodiscard]] value_t generator::emit_expr(const ast::expr::call &expr) {
+        std::vector<value_t> arguments;
+        for (const auto &arg: expr.arguments) {
+            arguments.push_back(emit_expr(arg));
+        }
+
+        value_t result{make_tmp_var()};
+        current_block_.append(func_call{expr.identifier, arguments, result});
+
+        return result;
     }
 }

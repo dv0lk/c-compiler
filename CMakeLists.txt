@@ -39,6 +39,7 @@ add_executable(compiler-rewrite src/main.cpp
         src/parser/ast/stmt.hpp
         src/ir/ir.hpp
         src/flow_graph/adapter/ir_adapter.hpp
+        src/flow_graph/node_t.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

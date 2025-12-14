@@ -15,56 +15,56 @@ namespace compiler::ir {
         std::vector<basic_block_t> generate(const std::vector<ast::stmt::stmt_ptr> &ast);
 
     private:
-        std::vector<basic_block_t> bbs;
-        basic_block_t curr_bb{"entry"};
-        Resolver resolver;
-        int temp_var_counter = 0;
+        Resolver resolver_;
+        std::vector<basic_block_t> blocks_;
+        basic_block_t current_block_{"entry"};
 
-        //pushes current block to bbs and starts a new bb
+        int var_counter_ = 0;
+        int label_counter_ = 0;
+
+        //push current block to blocks
+        void finalize_current_block();
+        //finalize current block and start new block with provided label
         void start_new_bb(std::string label);
 
-        std::string generate_tmp();
+        std::string make_tmp_var();
+        std::string make_label(const std::string &label);
+        std::string make_variable_name(const std::string& name, size_t scope_id);
 
-        static std::string get_label(const std::string &label);
+        void emit_stmt(const ast::stmt::stmt_ptr &stmt_var);
 
-        void process_stmt(const ast::stmt::stmt_ptr &stmt_var);
+        void emit_stmt(const ast::stmt::return_ &ret);
 
-        // void process_stmt(const ast::stmt &stmt_var);
+        void emit_stmt(const ast::stmt::expression &stmt);
 
-        value_t process_expr(const ast::expr_ptr &expr_var);
+        void emit_stmt(const ast::stmt::block &block);
 
-        // ir_value process_expr(const ast::expr &expr_var);
+        void emit_stmt(const ast::stmt::if_ &stmt);
 
-        void process_stmt(const ast::stmt::return_ &ret);
+        void emit_stmt(const ast::stmt::while_ &stmt);
 
-        void process_stmt(const ast::stmt::expression &stmt);
+        void emit_stmt(const ast::stmt::function_param &stmt);
 
-        void process_stmt(const ast::stmt::block &block);
+        void emit_stmt(const ast::stmt::function_decl &func);
 
-        void process_stmt(const ast::stmt::if_ &stmt);
+        void emit_stmt(const ast::stmt::variable &variable);
 
-        void process_stmt(const ast::stmt::while_ &stmt);
+        value_t emit_expr(const ast::expr::expr_ptr &expr_var);
 
-        value_t process_expr(const ast::literal_expr &literal);
+        value_t emit_expr(const ast::expr::literal &literal);
 
-        value_t process_expr(const ast::variable_expr &variable);
+        value_t emit_expr(const ast::expr::variable &variable);
 
-        value_t process_expr(const ast::binary_expr &expr);
+        value_t emit_expr(const ast::expr::binary &expr);
 
-        value_t process_expr(const ast::unary_expr &expr);
+        value_t emit_expr(const ast::expr::unary &expr);
 
-        value_t process_expr(const ast::grouping_expr &expr);
+        value_t emit_expr(const ast::expr::grouping &expr);
 
-        value_t process_expr(const ast::assignment_expr &expr);
+        value_t emit_expr(const ast::expr::assignment &expr);
 
-        value_t process_expr(const ast::logical_expr &expr);
+        value_t emit_expr(const ast::expr::logical &expr);
 
-        value_t process_expr(const ast::call_expr &call);
-
-        void process_stmt(const ast::stmt::function_param &stmt);
-
-        void process_stmt(const ast::stmt::function_decl &func);
-
-        void process_stmt(const ast::stmt::variable &variable);
+        value_t emit_expr(const ast::expr::call &expr);
     };
 }

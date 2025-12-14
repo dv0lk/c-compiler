@@ -50,116 +50,116 @@ namespace compiler::ast {
         throw std::runtime_error(error_message);
     }
 
-    ast::expr_ptr parser::parse_expression() {
+    expr::expr_ptr parser::parse_expression() {
         return parse_assignment_expr();
     }
 
-    ast::expr_ptr parser::parse_assignment_expr() {
+    expr::expr_ptr parser::parse_assignment_expr() {
         auto expression = parse_logical_or_expr();
         if (match(token_t::Equal)) {
             auto value = parse_assignment_expr();
 
-            if (const auto variable = expression->get_if<ast::variable_expr>()) {
+            if (const auto variable = expression->get_if<expr::variable>()) {
                 auto name = variable->name;
-                return ast::make_expr<ast::assignment_expr>(name, value);
+                return expr::make_expr<expr::assignment>(name, value);
             }
         }
         return expression;
     }
 
-    expr_ptr parser::parse_logical_or_expr() {
+    expr::expr_ptr parser::parse_logical_or_expr() {
         auto expression = parse_logical_and_expr();
         while (match(token_t::LogicalOr)) {
             auto op = previous().get_type();
             auto right = parse_logical_and_expr();
-            expression = make_expr<logical_expr>(expression, op, right);
+            expression = make_expr<expr::logical>(expression, op, right);
         }
         return expression;
     }
 
-    ast::expr_ptr parser::parse_logical_and_expr() {
+    expr::expr_ptr parser::parse_logical_and_expr() {
         auto expression = parse_equality_expr();
 
         while (match(token_t::LogicalAnd)) {
             auto op = previous().get_type();
             auto right = parse_equality_expr();
-            expression = ast::make_expr<ast::logical_expr>(expression, op, right);
+            expression = expr::make_expr<expr::logical>(expression, op, right);
         }
         return expression;
     }
 
-    ast::expr_ptr parser::parse_equality_expr() {
+    expr::expr_ptr parser::parse_equality_expr() {
         auto expression = parse_comparison_expr();
         while (match(token_t::NotEqual, token_t::EqualEqual)) {
             auto op = previous().get_type();
             auto right = parse_comparison_expr();
-            expression = ast::make_expr<ast::binary_expr>(expression, op, right);
+            expression = expr::make_expr<expr::binary>(expression, op, right);
         }
         return expression;
     }
 
-    expr_ptr parser::parse_comparison_expr() {
+    expr::expr_ptr parser::parse_comparison_expr() {
         auto expression = parse_additive_expr();
         while (match(token_t::Less, token_t::LessEqual, token_t::Greater, token_t::GreaterEqual)) {
             auto op = previous().get_type();
             auto right = parse_additive_expr();
-            expression = ast::make_expr<binary_expr>(expression, op, right);
+            expression = expr::make_expr<expr::binary>(expression, op, right);
         }
         return expression;
     }
 
-    expr_ptr parser::parse_additive_expr() {
+    expr::expr_ptr parser::parse_additive_expr() {
         auto expression = parse_multiplicative_expr();
         while (match(token_t::Plus, token_t::Minus)) {
             auto op = previous().get_type();
             auto right = parse_multiplicative_expr();
-            expression = ast::make_expr<ast::binary_expr>(expression, op, right);
+            expression = expr::make_expr<expr::binary>(expression, op, right);
         }
         return expression;
     }
 
-    expr_ptr parser::parse_multiplicative_expr() {
+    expr::expr_ptr parser::parse_multiplicative_expr() {
         auto expression = parse_unary_expr();
         while (match(token_t::Star, token_t::Slash)) {
             auto op = previous().get_type();
             auto right = parse_unary_expr();
-            expression = ast::make_expr<ast::binary_expr>(expression, op, right);
+            expression = expr::make_expr<expr::binary>(expression, op, right);
         }
         return expression;
     }
 
-    expr_ptr parser::parse_unary_expr() {
+    expr::expr_ptr parser::parse_unary_expr() {
         if (match(token_t::Tilde, token_t::Minus, token_t::Not)) {
             auto op = previous().get_type();
             auto right = parse_unary_expr();
-            return ast::make_expr<ast::unary_expr>(op, right);
+            return expr::make_expr<expr::unary>(op, right);
         }
         return parse_primary_expr();
     }
 
-    expr_ptr parser::parse_primary_expr() {
+    expr::expr_ptr parser::parse_primary_expr() {
         if (match(token_t::IntLiteral, token_t::StringLiteral, token_t::DoubleLiteral)) {
-            return ast::make_expr<ast::literal_expr>(*previous().get_literal());
+            return expr::make_expr<expr::literal>(*previous().get_literal());
         }
 
         if (match(token_t::LeftParen)) {
             auto expr = parse_expression();
             consume(token_t::RightParen, "Expected ')' after expression");
-            return ast::make_expr<ast::grouping_expr>(expr);
+            return expr::make_expr<expr::grouping>(expr);
         }
 
         if (match(token_t::Identifier)) {
             const std::string name = previous().get_lexeme();
             if (match(token_t::LeftParen))
                 return parse_call_expr(name);
-            return ast::make_expr<ast::variable_expr>(name);
+            return expr::make_expr<expr::variable>(name);
         }
 
         throw std::runtime_error("Encounter Unknown expression while parsing");
     }
 
-    ast::expr_ptr parser::parse_call_expr(const std::string &name) {
-        std::vector<ast::expr_ptr> arguments;
+    expr::expr_ptr parser::parse_call_expr(const std::string &name) {
+        std::vector<expr::expr_ptr> arguments;
 
         if (!check(token_t::RightParen)) {
             do {
@@ -168,7 +168,7 @@ namespace compiler::ast {
         }
 
         consume(token_t::RightParen, "Expected ')' after arguments");
-        return ast::make_expr<ast::call_expr>(name, arguments);
+        return expr::make_expr<expr::call>(name, arguments);
     }
 
     stmt::stmt_ptr parser::parse_statement() {
@@ -213,7 +213,7 @@ namespace compiler::ast {
     stmt::stmt_ptr parser::parse_variable_declaration_statement() {
         std::string variable_name = consume(token_t::Identifier, "Expected identifier after type").get_lexeme();
 
-        std::optional<ast::expr_ptr> initializer;
+        std::optional<expr::expr_ptr> initializer;
         if (match(token_t::Equal)) {
             initializer = parse_expression();
         }

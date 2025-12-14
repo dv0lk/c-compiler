@@ -2,442 +2,145 @@
 
 #include <memory>
 #include <vector>
+#include <ranges>
+#include <unordered_set>
 
 #include "adapter/ir_adapter.hpp"
-#include "ir/ir.hpp"
+#include "node_t.hpp"
 
 namespace compiler::cfg {
-    template<typename InstructionType>
-    struct basic_block_t {
-        std::vector<std::shared_ptr<InstructionType> > instructions;
-
-        std::vector<std::shared_ptr<basic_block_t> > successors;
-        std::vector<std::shared_ptr<basic_block_t> > predecessors;
-
-        basic_block_t() = default;
-
-        explicit basic_block_t(const std::vector<std::shared_ptr<InstructionType> > &instructions)
-            : instructions(instructions) {
-        }
-
-        void push_successor(const std::shared_ptr<basic_block_t> &value) {
-            if (std::ranges::find(successors, value) != successors.end()) {
-                return;
-            }
-            successors.emplace_back(value);
-        }
-
-        void push_predecessor(const std::shared_ptr<basic_block_t> &value) {
-            if (std::ranges::find(predecessors, value) != predecessors.end()) {
-                return;
-            }
-            predecessors.emplace_back(value);
-        }
-
-        void push_instr(const std::shared_ptr<InstructionType> &instruction) {
-            instructions.emplace_back(instruction);
-        }
-
-        void clear() {
-            instructions.clear();
-            successors.clear();
-            predecessors.clear();
-        }
-
-        [[nodiscard]] bool empty() const {
-            return instructions.empty();
-        }
-    };
-
-    template<typename InstrType>
+    //TODO currently we generate IR and CFG for the whole program
+    // It would be better if we generate vector of ir functions. And then generate cfg for each function
     class cfg {
-    private:
-        using bb_t = basic_block_t<InstrType>;
+    public:
+        static constexpr size_t START_NODE = 0;
+        static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
+        static constexpr size_t INVALID_NODE = std::numeric_limits<size_t>::max();
 
-        instruction_adapter<InstrType> adapter;
-        std::vector<std::shared_ptr<bb_t> > basic_blocks;
-        std::unordered_map<std::string, bb_t> label_cache;
+    private:
+        //TODO should probably do something better
+        std::unordered_map<size_t, Node> nodes_;
+        std::unordered_map<std::string, size_t> label_cache_;
+        size_t next_node_id_ = 0;
 
     public:
-        void generate_cfg(const std::vector<InstrType> &instructions) {
-            auto bbs = partition_to_bb(instructions);
-            basic_blocks.clear();
+        cfg() = default;
+
+        void add_edge(size_t from, size_t to) {
+            auto node_from = find_node(from);
+            auto node_to = find_node(to);
+
+            if (!node_from || !node_to) {
+                throw std::runtime_error("Error adding an edge, one of the nodes doesn't exist");
+            }
+
+            node_from->add_successor(to);
+            node_to->add_predecessor(from);
         }
 
-        std::vector<bb_t> partition_to_bb(const std::vector<InstrType> &instructions) {
-            std::vector<bb_t> finished_blocks;
-            bb_t current_block;
+        void remove_edge(const size_t from, const size_t to) {
+            const auto node_from = find_node(from);
+            const auto node_to = find_node(to);
 
-            //TODO add comments
-            for (const auto &instruction: instructions) {
-                if (adapter.is_block_starter(instruction)) {
-                    if (!current_block.empty()) {
-                        finished_blocks.emplace_back(current_block);
-                    }
+            if (!node_from || !node_to) {
+                throw std::runtime_error("Error deleting an edge, one of the nodes doesn't exist");
+            }
 
-                    current_block.clear();
-                    current_block.push_instr(instruction);
+            node_from->remove_successor(to);
+            node_to->remove_predecessor(from);
+        }
+
+        void build_nodes(const std::vector<ir::basic_block_t> &blocks) {
+            nodes_[START_NODE] = Node{};
+            nodes_[EXIT_NODE] = Node{};
+
+            std::vector<size_t> block_ids;
+
+            block_ids.push_back(START_NODE);
+            for (const auto &block: blocks) {
+                block_ids.push_back(add_node(block));
+            }
+            block_ids.push_back(EXIT_NODE);
+
+            build_edges(block_ids);
+        }
+
+        void build_edges(const std::vector<size_t> &node_ids) {
+            for (size_t i = 0; i < node_ids.size(); ++i) {
+                const auto current_id = node_ids[i];
+
+                if (current_id == START_NODE) {
+                    add_edge(START_NODE, node_ids[i + 1]);
+                }
+
+                if (current_id == EXIT_NODE) {
                     continue;
                 }
 
-                if (adapter.is_block_terminator(instruction)) {
-                    current_block.push_instr(instruction);
-                    finished_blocks.emplace_back(current_block);
-                    current_block.clear();
+                const auto &current_node = nodes_[current_id];
+
+                if (!current_node.has_block()) {
                     continue;
                 }
 
-                current_block.push_instr(instruction);
-            }
+                const auto &curr_block = current_node.block;
 
-            if (!current_block.empty()) {
-                finished_blocks.emplace_back(current_block);
-            }
+                if (!curr_block->has_terminator()) {
+                    add_edge(current_id, node_ids[i + 1]);
+                    continue;
+                }
 
-            return finished_blocks;
-        }
+                //TODO add adapter so this will work with IR instruction and Asm instructions
+                const auto &last_instruction = curr_block->back();
+                if (last_instruction.holds<ir::return_>()) {
+                    add_edge(current_id, EXIT_NODE);
+                }
 
-        void build_label_cache() {
-            for (const auto &bb: basic_blocks) {
-                if (bb->empty()) {
-                    const auto instruction = bb->instructions.front();
-                    if (adapter.is_label(*instruction)) {
-                        auto name = adapter.get_label_name(instruction);
-                        label_cache[name] = bb;
-                    }
+                if (const auto &jmp = last_instruction.get_if<ir::jump>()) {
+                    auto label = jmp->target_label.name;
+                    add_edge(current_id, find_by_label(label));
+                }
+
+                if (const auto &jmp = last_instruction.get_if<ir::jump_if_zero>()) {
+                    auto label = jmp->target_label.name;
+                    add_edge(current_id, find_by_label(label));
+                    add_edge(current_id, node_ids[i + 1]);
+                }
+
+                if (const auto &jmp = last_instruction.get_if<ir::jump_if_not_zero>()) {
+                    auto label = jmp->target_label.name;
+                    add_edge(current_id, find_by_label(label));
+                    add_edge(current_id, node_ids[i + 1]);
                 }
             }
+        }
+
+        [[nodiscard]] Node *find_node(const std::size_t id) {
+            const auto it = nodes_.find(id);
+            return it != nodes_.end() ? &it->second : nullptr;
+        }
+
+        [[nodiscard]] std::size_t find_by_label(const std::string &label) const {
+            auto it = label_cache_.find(label);
+            if (it != label_cache_.end()) {
+                return it->second;
+            }
+            throw std::runtime_error("Encountered lable that was not in cache");
+        }
+
+        size_t add_node(const ir::basic_block_t &block) {
+            const size_t id = next_node_id_++;
+
+            label_cache_[block.name()] = id;
+
+            nodes_[id] = Node(block);
+            return id;
+        }
+
+    public:
+        //TODO move this to static function
+        void generate_cfg(const std::vector<ir::basic_block_t> &blocks) {
+            build_nodes(blocks);
         }
     };
 }
-
-
-// namespace compiler {
-//     enum node_type {
-//         EXIT = -1,
-//         ENTRY = 0,
-//     };
-//
-//     template <typename T>
-//     concept InstructionType = std::same_as<T, ir::ir_instruction> || std::same_as<T, x86::instruction>;
-//
-//     template <InstructionType T>
-//     struct Node {
-//         int id;
-//         std::vector<T> instructions;
-//         std::vector<int> predecessors;
-//         std::vector<int> successors;
-//
-//         explicit Node(const int id)
-//             : id(id) {}
-//
-//         Node(const int id, const std::vector<T>& instructions)
-//             : id(id),
-//               instructions(instructions) {}
-//
-//         friend bool operator==(const Node& lhs, const Node& rhs) {
-//             return lhs.id == rhs.id;
-//         }
-//
-//     };
-//
-//     // template<>
-//     // struct Node<x86::instruction> {
-//     //     x86::Operand id;
-//     //     double spill_cost = 0.0;
-//     //     std::vector<x86::Operand> neighbors;
-//     //     std::optional<int> color = {};
-//     //     bool pruned = false;
-//     //
-//     //     explicit Node(const x86::Operand &id)
-//     //         : id(id) {
-//     //     }
-//     //
-//     //     void add_neighbor(const x86::Operand& operand) {
-//     //         neighbors.emplace_back(operand);
-//     //     }
-//     // };
-//
-//
-//     template <InstructionType T>
-//     struct InstructionAdapter;
-//
-//     template <>
-//     struct InstructionAdapter<ir::ir_instruction> {
-//         using Instr = ir::ir_instruction;
-//
-//         static bool is_label(const Instr& instruction) {
-//             return std::holds_alternative<ir::ir_label>(instruction);
-//         }
-//
-//         static std::string label_name(const Instr& instruction) {
-//             if (const auto label = std::get_if<ir::ir_label>(&instruction)) {
-//                 return label->name;
-//             }
-//             throw std::runtime_error("Instruction is not label");
-//         }
-//
-//         static bool is_conditional_jump(const Instr& instruction) {
-//             return std::holds_alternative<ir::ir_jump_if_zero>(instruction)
-//                    || std::holds_alternative<ir::ir_jump_if_not_zero>(instruction);
-//         }
-//
-//         static bool is_unconditional_jump(const Instr& instruction) {
-//             return std::holds_alternative<ir::ir_jump>(instruction);
-//         }
-//
-//         static std::string jump_label(const Instr& instruction) {
-//             if (std::holds_alternative<ir::ir_jump>(instruction))
-//                 return std::get<ir::ir_jump>(instruction).label.name;
-//
-//             if (std::holds_alternative<ir::ir_jump_if_zero>(instruction))
-//                 return std::get<ir::ir_jump_if_zero>(instruction).label.name;
-//
-//             if (std::holds_alternative<ir::ir_jump_if_not_zero>(instruction))
-//                 return std::get<ir::ir_jump_if_not_zero>(instruction).label.name;
-//
-//             throw std::runtime_error("Instruction is not jump");
-//         }
-//
-//         static bool is_block_starter(const Instr& instruction) {
-//             return std::holds_alternative<ir::ir_jump>(instruction)
-//                    || std::holds_alternative<ir::ir_jump_if_zero>(instruction)
-//                    || std::holds_alternative<ir::ir_return>(instruction);
-//         }
-//
-//         static bool is_block_terminator(const Instr& instruction) {
-//             return is_label(instruction);
-//         }
-//
-//         static bool is_ret(const Instr& instruction) {
-//             return std::holds_alternative<ir::ir_return>(instruction);
-//         }
-//
-//     };
-//
-//     template <>
-//     struct InstructionAdapter<x86::instruction> {
-//         using Instr = x86::instruction;
-//
-//         static bool is_label(const Instr& instruction) {
-//             return std::holds_alternative<x86::label>(instruction);
-//         }
-//
-//         static bool is_conditional_jump(const Instr& instruction) {
-//             return std::holds_alternative<x86::jmp_cc>(instruction);
-//         }
-//
-//         static bool is_unconditional_jump(const Instr& instruction) {
-//             return std::holds_alternative<x86::jmp>(instruction);
-//         }
-//
-//         static std::string jump_label(const Instr& instruction) {
-//             if (const auto jmp = std::get_if<x86::jmp>(&instruction))
-//                 return jmp->target.name;
-//
-//             if (const auto jmp_cc = std::get_if<x86::jmp_cc>(&instruction))
-//                 return jmp_cc->target.name;
-//
-//             throw std::runtime_error("Instruction is not jump");
-//         }
-//
-//         static std::string label_name(const Instr& instruction) {
-//             if (const auto label = std::get_if<x86::label>(&instruction)) {
-//                 return label->name.name;
-//             }
-//             throw std::runtime_error("Instruction is not label");
-//         }
-//
-//         static bool is_block_starter(const Instr& instruction) {
-//             return std::holds_alternative<x86::jmp>(instruction)
-//                    || std::holds_alternative<x86::jmp_cc>(instruction)
-//                    || std::holds_alternative<x86::ret>(instruction);
-//         }
-//
-//         static bool is_block_terminator(const Instr& instruction) {
-//             return is_label(instruction);
-//         }
-//
-//         static bool is_ret(const Instr& instruction) {
-//             return std::holds_alternative<x86::ret>(instruction);
-//         }
-//     };
-//
-//     template <InstructionType T>
-//     class FlowGraph {
-//     public:
-//         using NodeType = Node<T>;
-//         std::vector<NodeType> nodes;
-//
-//         void generate_flowgraph(const std::vector<T>& instructions) {
-//             auto basic_blocks = partition_to_bb(instructions);
-//             nodes.clear();
-//
-//             nodes.emplace_back(ENTRY);
-//
-//             for (auto& bb : basic_blocks)
-//                 nodes.emplace_back(++id_counter, bb);
-//
-//             nodes.emplace_back(EXIT);
-//             build_label_cache();
-//             add_all_edges();
-//         }
-//
-//         [[nodiscard]] NodeType& get_node_from_id(int node_id) {
-//             for (auto& node : nodes) {
-//                 if (node.id == node_id)
-//                     return node;
-//             }
-//             throw std::runtime_error("Node not found with id: " + std::to_string(node_id));
-//         }
-//
-//         void remove_edge(const NodeType& node) {
-//             for (const auto successor : node.successors) {
-//                 auto n = get_node_from_id(successor);
-//                 std::erase(n.predecessors, node.id);
-//             }
-//
-//             for (const auto predecessor : node.predecessors) {
-//                 auto n = get_node_from_id(predecessor);
-//                 std::erase(n.successors, node.id);
-//             }
-//         }
-//
-//         void add_node(const NodeType& node) {
-//             nodes.emplace_back(node);
-//         }
-//
-//         void remove_node(const NodeType& node) {
-//             remove_edge(node);
-//             std::erase(nodes, node);
-//         }
-//
-//         void remove_node(const int id) {
-//             const auto node = get_node_from_id(id);
-//             remove_node(node);
-//         }
-//
-//
-//         [[nodiscard]] std::vector<T> emit_instructions() const {
-//             std::vector<T> instructions;
-//             for (const auto& node : nodes) {
-//                 for (const auto& instr : node.instructions) {
-//                     instructions.emplace_back(instr);
-//                 }
-//             }
-//             return instructions;
-//         }
-//
-//     private:
-//         using adapter = InstructionAdapter<T>;
-//         int id_counter = 0;
-//         std::unordered_map<std::string, int> labels_to_block_id;
-//
-//         void build_label_cache() {
-//             for (const auto& node : nodes) {
-//                 if (!node.instructions.empty()) {
-//                     const auto instruction = node.instructions.front();
-//                     if (adapter::is_label(instruction)) {
-//                         auto name = adapter::label_name(instruction);
-//                         labels_to_block_id[name] = node.id;
-//                     }
-//                 }
-//             }
-//         }
-//
-//         int label_to_block_id(const std::string& label) {
-//             if (labels_to_block_id.contains(label)) {
-//                 return labels_to_block_id[label];
-//             }
-//             throw std::runtime_error("Label not found: " + label);
-//         }
-//
-//         std::vector<std::vector<T> > partition_to_bb(const std::vector<T>& instructions) {
-//             std::vector<std::vector<T> > finished_blocks;
-//             std::vector<T> current_block;
-//
-//             for (const auto& instruction : instructions) {
-//                 if (adapter::is_block_starter(instruction)) {
-//                     if (!current_block.empty())
-//                         finished_blocks.emplace_back(current_block);
-//
-//                     current_block.clear();
-//                     current_block.push_back(instruction);
-//                     continue;
-//                 }
-//
-//                 if (adapter::is_block_terminator(instruction)) {
-//                     current_block.emplace_back(instruction);
-//                     finished_blocks.emplace_back(current_block);
-//                     current_block.clear();
-//                     continue;
-//                 }
-//
-//                 current_block.emplace_back(instruction);
-//             }
-//
-//             if (!current_block.empty())
-//                 finished_blocks.emplace_back(current_block);
-//
-//             return finished_blocks;
-//         }
-//
-//         void add_edge(const int start_id, const int end_id) {
-//             for (auto& node : nodes) {
-//                 if (node.id == start_id)
-//                     node.successors.push_back(end_id);
-//
-//                 if (node.id == end_id)
-//                     node.predecessors.push_back(start_id);
-//             }
-//         }
-//
-//         void add_all_edges() {
-//             if (nodes.size() < 2) {
-//                 add_edge(ENTRY, EXIT);
-//                 return;
-//             }
-//
-//             add_edge(ENTRY, 1);
-//             for (const auto& node : nodes) {
-//                 int next_id;
-//
-//                 if (node.id == ENTRY || node.id == EXIT)
-//                     continue;
-//
-//                 //reached the last node
-//                 if (node.id == id_counter)
-//                     next_id = EXIT;
-//                 else
-//                     next_id = node.id + 1;
-//
-//                 auto last_instruction = node.instructions.back();
-//
-//                 if (adapter::is_ret(last_instruction)) {
-//                     add_edge(node.id, EXIT);
-//                     continue;
-//                 }
-//
-//                 if (adapter::is_unconditional_jump(last_instruction)) {
-//                     auto label = adapter::jump_label(last_instruction);
-//                     auto target_id = label_to_block_id(label);
-//                     add_edge(node.id, target_id);
-//                     continue;
-//                 }
-//
-//                 if (adapter::is_conditional_jump(last_instruction)) {
-//                     auto label = adapter::jump_label(last_instruction);
-//                     auto target_id = label_to_block_id(label);
-//                     add_edge(node.id, target_id);
-//                     add_edge(node.id, next_id);
-//                     continue;
-//                 }
-//
-//                 add_edge(node.id, next_id);
-//             }
-//
-//         }
-//
-//     };
-// }
-

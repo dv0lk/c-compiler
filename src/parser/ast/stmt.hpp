@@ -17,21 +17,21 @@ namespace compiler::ast::stmt {
     }
 
     struct return_ {
-        expr_ptr value;
+        expr::expr_ptr value;
     };
 
     struct expression {
-        expr_ptr expr;
+        expr::expr_ptr expr;
     };
 
     struct if_ {
-        expr_ptr condition;
+        expr::expr_ptr condition;
         stmt_ptr then_branch;
         std::optional<stmt_ptr> else_branch;
     };
 
     struct while_ {
-        expr_ptr condition;
+        expr::expr_ptr condition;
         stmt_ptr body;
     };
 
@@ -53,12 +53,12 @@ namespace compiler::ast::stmt {
 
     struct variable {
         std::string name;
-        std::optional<expr_ptr> initializer;
+        std::optional<expr::expr_ptr> initializer;
     };
 
     struct for_loop {
         variable variable;
-        expr_ptr condition;
+        expr::expr_ptr condition;
         stmt_ptr body;
     };
 
