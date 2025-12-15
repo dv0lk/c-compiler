@@ -9,13 +9,28 @@
 namespace compiler::ir::printer {
     class printer {
     public:
+        static std::string to_string(const program_t& program) {
+            std::stringstream ss;
+            for (const auto &func: program.functions) {
+                ss << "Function: " << func.name << "\n";
+                ss << "=====================\n\n";
+                ss << to_string(func);
+                ss << "=====================\n\n";
+            }
+            return ss.str();
+        }
+
+        static std::string to_string(const function_t& func) {
+            return to_string(func.blocks);
+        }
+
         static std::string to_string(const std::vector<basic_block_t> &blocks) {
             std::stringstream ss;
             int count = 1;
             for (const auto &block: blocks) {
                 ss << "Block#" << count << "\n";
                 ss << "=====================\n";
-                ss << block.name() << ":\n";
+                // ss << block.name() << ":\n";
                 ss << to_string(block.instructions());
                 ss << "\n";
                 ss << "=====================\n\n";

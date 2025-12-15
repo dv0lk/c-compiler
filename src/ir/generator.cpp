@@ -5,27 +5,40 @@
 // we have a function add_instruction. And then this instruction decides if to start/terminate the block based on the current instruction
 // ????
 namespace compiler::ir {
-    std::vector<basic_block_t> generator::generate(const std::vector<ast::stmt::stmt_ptr> &ast) {
-        current_block_ = basic_block_t("entry");
-
+    program_t generator::generate(const std::vector<ast::stmt::stmt_ptr> &ast) {
         for (const auto &stmt: ast) {
             emit_stmt(stmt);
         }
 
-        finalize_current_block();
+        return program_;
+    }
 
-        return blocks_;
+    void generator::finalize_current_function() {
+        if (!current_block_.empty()) {
+            current_function_.add_bb(std::move(current_block_));
+            current_block_ = {};
+        }
+
+        if (!current_function_.empty()) {
+            program_.add_function(std::move(current_function_));
+            current_function_ = {};
+        }
+    }
+
+    void generator::start_new_function(const std::string &function_name) {
+        finalize_current_function();
+        current_function_ = function_t{function_name};
     }
 
     void generator::finalize_current_block() {
         if (!current_block_.empty()) {
-            blocks_.push_back(std::move(current_block_));
+            current_function_.add_bb(std::move(current_block_));
         }
     }
 
     void generator::start_new_bb(std::string label) {
         finalize_current_block();
-        current_block_ = basic_block_t{std::move(label)};
+        current_block_ = basic_block_t{};
     }
 
     [[nodiscard]] std::string generator::make_tmp_var() {
@@ -50,6 +63,7 @@ namespace compiler::ir {
         const auto ret_value = emit_expr(ret.value);
         current_block_.append(return_{ret_value});
     }
+
     //TODO uhh is this a bug?
     void generator::emit_stmt(const ast::stmt::expression &stmt) {
         emit_expr(stmt.expr);
@@ -59,7 +73,7 @@ namespace compiler::ir {
         resolver_.begin_scope();
 
         if (block.statements.empty()) {
-                        throw std::runtime_error("Cannot emit empty statement block");
+            throw std::runtime_error("Cannot emit empty statement block");
         }
 
         for (const auto &s: block.statements) {
@@ -80,7 +94,6 @@ namespace compiler::ir {
         start_new_bb(then_label);
 
         emit_stmt(stmt.then_branch);
-
         if (stmt.else_branch.has_value()) {
             start_new_bb(else_label);
             emit_stmt(stmt.else_branch.value());
@@ -115,14 +128,17 @@ namespace compiler::ir {
     void generator::emit_stmt(const ast::stmt::function_decl &func) {
         resolver_.begin_scope();
 
+        //TODO look here
+        std::vector<std::string> param_names;
         for (const auto &[name, type]: func.params) {
             resolver_.declare(name);
+            param_names.push_back(name);
         }
 
-        start_new_bb(func.function_name + "_entry");
+        start_new_function(func.function_name + "_entry");
         emit_stmt(func.body);
+        finalize_current_function();
 
-        start_new_bb("entry");
         resolver_.end_scope();
     }
 

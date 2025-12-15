@@ -8,17 +8,14 @@
 namespace compiler::ir {
     class basic_block_t {
     private:
-        std::string name_;
         std::vector<instruction> instructions_;
 
     public:
-        explicit basic_block_t(std::string name)
-            : name_(std::move(name)) {
-        }
+        basic_block_t() = default;
 
-        [[nodiscard]] const std::string &name() const {
-            return name_;
-        }
+        // [[nodiscard]] const std::string &name() const {
+        //     return name_;
+        // }
 
         [[nodiscard]] bool empty() const {
             return instructions_.empty();

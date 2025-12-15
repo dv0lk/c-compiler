@@ -45,43 +45,43 @@ namespace compiler::ast {
 
         expr::expr_ptr parse_expression();
 
-        expr::expr_ptr parse_assignment_expr();
+        expr::expr_ptr parse_assignment();
 
-        expr::expr_ptr parse_logical_or_expr();
+        expr::expr_ptr parse_logical_or();
 
-        expr::expr_ptr parse_logical_and_expr();
+        expr::expr_ptr parse_logical_and();
 
-        expr::expr_ptr parse_equality_expr();
+        expr::expr_ptr parse_equality();
 
-        expr::expr_ptr parse_comparison_expr();
+        expr::expr_ptr parse_comparison();
 
-        expr::expr_ptr parse_additive_expr();
+        expr::expr_ptr parse_additive();
 
-        expr::expr_ptr parse_multiplicative_expr();
+        expr::expr_ptr parse_multiplicative();
 
-        expr::expr_ptr parse_unary_expr();
+        expr::expr_ptr parse_unary();
 
         expr::expr_ptr parse_primary_expr();
 
-        expr::expr_ptr parse_call_expr(const std::string &name);
+        expr::expr_ptr parse_call(const std::string &name);
 
         stmt::stmt_ptr parse_statement();
 
-        stmt::stmt_ptr parse_if_statement();
+        stmt::stmt_ptr parse_if();
 
-        stmt::stmt_ptr parse_block_statement();
+        stmt::stmt_ptr parse_block();
 
-        stmt::stmt_ptr parse_while_statement();
+        stmt::stmt_ptr parse_while();
 
-        stmt::stmt_ptr parse_expression_statement();
+        stmt::stmt_ptr parse_expression_stmt();
 
-        stmt::stmt_ptr parse_return_statement();
+        stmt::stmt_ptr parse_return();
 
-        stmt::stmt_ptr parse_declaration_statement();
+        stmt::stmt_ptr parse_var_declaration();
 
-        stmt::stmt_ptr parse_variable_declaration_statement();
+        stmt::stmt_ptr parse_variable_declaration();
 
-        stmt::stmt_ptr parse_function_declaration_statement();
+        stmt::stmt_ptr parse_function_declaration();
     };
 }
 

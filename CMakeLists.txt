@@ -46,6 +46,9 @@ add_executable(compiler-rewrite src/main.cpp
         src/transforms/transforms/copy_propagation.hpp
         src/transforms/transforms/utils.hpp
         src/transforms/transforms/unreachable_code_elem.hpp
+        src/ir/types/function_t.hpp
+        src/base/program.hpp
+        src/base/instruction.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

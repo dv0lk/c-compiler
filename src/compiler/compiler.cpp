@@ -1,7 +1,7 @@
 #include "compiler.hpp"
 
 #include "ir/printer.h"
-#include "analysis/cfg.hpp"
+#include "analysis/CFG.hpp"
 #include "transforms/manager.hpp"
 #include "transforms/transforms/constant_fold.hpp"
 #include "transforms/transforms/copy_propagation.hpp"
@@ -11,25 +11,39 @@ namespace compiler {
         auto tokens = lexer.parse_tokens(source);
         const auto ast = parser.parse_ast(tokens);
         auto ir = ir_generator.generate(ast);
-        cfg::cfg cfg;
-        cfg.get_cfg(ir);
+        std::println("{}", ir::printer::printer::to_string(ir));
+
+        // cfg::cfg cfg;
+        // cfg.get_cfg(ir);
 
         TransformManager<std::vector<ir::basic_block_t>> tm;
         tm.register_transform<transforms::ConstantFolding>();
         tm.register_transform<transforms::CopyPropagation>();
-        std::println("{}", ir::printer::printer::to_string(ir));
-        std::println("----------------------------------");
 
-        bool changed = true;
-        while (changed) {
-            changed = false;
-            for (auto& block : ir) {
-                changed |= tm.run_all(ir);
-            }
-        }
+        tm.run_on_program(ir);
 
 
         std::println("{}", ir::printer::printer::to_string(ir));
+
+
+        // TransformManager<std::vector<ir::basic_block_t>> tm;
+        // tm.register_transform<transforms::ConstantFolding>();
+        // tm.register_transform<transforms::CopyPropagation>();
+        // std::println("{}", ir::printer::printer::to_string(ir));
+        // std::println("----------------------------------");
+        //
+        //
+        // //TODO move this shit out of here
+        // bool changed = true;
+        // while (changed) {
+        //     changed = false;
+        //     for (auto& block : ir) {
+        //         changed |= tm.run_all(ir);
+        //     }
+        // }
+        //
+        //
+        // std::println("{}", ir::printer::printer::to_string(ir));
 
         // std::println("ir:");
         // std::println("{}", ir::printer::ir_printer::to_string(ir));

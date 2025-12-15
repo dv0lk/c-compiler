@@ -11,7 +11,7 @@
 namespace compiler::cfg {
     //TODO currently we generate IR and CFG for the whole program
     // It would be better if we generate vector of ir functions. And then generate cfg for each function
-    class cfg {
+    class CFG {
     public:
         static constexpr size_t START_NODE = 0;
         static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
@@ -19,12 +19,13 @@ namespace compiler::cfg {
 
     private:
         //TODO should probably do something better
+        std::string name_;
         std::unordered_map<size_t, Node> nodes_;
         std::unordered_map<std::string, size_t> label_cache_;
         size_t next_node_id_ = 0;
 
     public:
-        cfg() = default;
+        CFG() = default;
 
         auto get_nodes() {
             return std::views::values(nodes_);
@@ -135,18 +136,24 @@ namespace compiler::cfg {
         size_t add_node(const ir::basic_block_t &block) {
             const size_t id = next_node_id_++;
 
-            label_cache_[block.name()] = id;
+            // label_cache_[block.name()] = id;
+            //cache label, labels should always be the first instruction in bb
+            if (auto label = block.instructions().front().get_if<ir::label>()) {
+                label_cache_[label->name] = id;
+            }
 
             nodes_[id] = Node(block);
             return id;
         }
 
-
-
-        static cfg get_cfg(const std::vector<ir::basic_block_t> &blocks) {
-            cfg cfg;
+        static CFG from_bbs(const std::vector<ir::basic_block_t>& blocks) {
+            CFG cfg;
             cfg.build_nodes(blocks);
             return cfg;
+        }
+
+        static CFG from_function(const ir::function_t& function) {
+            return from_bbs(function.blocks);
         }
     };
 }

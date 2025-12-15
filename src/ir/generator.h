@@ -7,20 +7,28 @@
 #include "scope/resolver.hpp"
 #include "ir.hpp"
 #include "parser/ast.hpp"
+#include "types/function_t.hpp"
 // #include "../parser/ast.hpp"
 
 namespace compiler::ir {
     class generator {
     public:
-        std::vector<basic_block_t> generate(const std::vector<ast::stmt::stmt_ptr> &ast);
+        program_t generate(const std::vector<ast::stmt::stmt_ptr> &ast);
 
     private:
+        program_t program_;
+        function_t current_function_;
+        basic_block_t current_block_;
+
         Resolver resolver_;
-        std::vector<basic_block_t> blocks_;
-        basic_block_t current_block_{"entry"};
 
         int var_counter_ = 0;
         int label_counter_ = 0;
+
+
+        void finalize_current_function();
+
+        void start_new_function(const std::string &function_name);
 
         //push current block to blocks
         void finalize_current_block();

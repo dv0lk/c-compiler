@@ -20,10 +20,18 @@ namespace compiler {
             passes_.emplace_back(std::move(instance));
         }
 
-        bool run_all(InstrType& data) {
+        bool run_on_function(ir::function_t& function) {
             bool changed = false;
-            for ( auto& pass : passes_) {
-                changed |= pass->run(data);
+            for (auto& pass : passes_) {
+                changed |= pass->run(function.blocks);
+            }
+            return changed;
+        }
+
+        bool run_on_program(ir::program_t& program) {
+            bool changed = false;
+            for (auto& function : program) {
+                changed |= run_on_function(function);
             }
             return changed;
         }
