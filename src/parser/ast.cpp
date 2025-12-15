@@ -27,7 +27,7 @@ namespace compiler::ast {
 
     std::optional<token> parser::peek_next() const {
         if (is_end()) {
-            return {};
+            return std::nullopt;
         }
         return tokens[current_position + 1];
     }

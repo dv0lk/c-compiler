@@ -26,6 +26,10 @@ namespace compiler::cfg {
     public:
         cfg() = default;
 
+        auto get_nodes() {
+            return std::views::values(nodes_);
+        }
+
         void add_edge(size_t from, size_t to) {
             auto node_from = find_node(from);
             auto node_to = find_node(to);
@@ -125,7 +129,7 @@ namespace compiler::cfg {
             if (it != label_cache_.end()) {
                 return it->second;
             }
-            throw std::runtime_error("Encountered lable that was not in cache");
+            throw std::runtime_error("Encountered label that was not in cache");
         }
 
         size_t add_node(const ir::basic_block_t &block) {
@@ -137,10 +141,12 @@ namespace compiler::cfg {
             return id;
         }
 
-    public:
-        //TODO move this to static function
-        void generate_cfg(const std::vector<ir::basic_block_t> &blocks) {
-            build_nodes(blocks);
+
+
+        static cfg get_cfg(const std::vector<ir::basic_block_t> &blocks) {
+            cfg cfg;
+            cfg.build_nodes(blocks);
+            return cfg;
         }
     };
 }

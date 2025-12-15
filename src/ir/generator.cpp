@@ -50,7 +50,7 @@ namespace compiler::ir {
         const auto ret_value = emit_expr(ret.value);
         current_block_.append(return_{ret_value});
     }
-
+    //TODO uhh is this a bug?
     void generator::emit_stmt(const ast::stmt::expression &stmt) {
         emit_expr(stmt.expr);
     }

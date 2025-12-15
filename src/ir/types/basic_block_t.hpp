@@ -34,14 +34,14 @@ namespace compiler::ir {
 
         [[nodiscard]] const instruction &front() const {
             if (empty()) {
-                                throw std::runtime_error("Cannot call front() on an empty basic block");
+                throw std::runtime_error("Cannot call front() on an empty basic block");
             }
             return instructions_.front();
         }
 
         [[nodiscard]] const instruction &back() const {
             if (empty()) {
-                                throw std::runtime_error("Cannot call back() on an empty basic block");
+                throw std::runtime_error("Cannot call back() on an empty basic block");
             }
             return instructions_.back();
         }
@@ -51,17 +51,17 @@ namespace compiler::ir {
         }
 
         template<typename T>
-        void append(T&& new_instruction) {
+        void append(T &&new_instruction) {
             instructions_.push_back(instruction{std::forward<T>(new_instruction)});
         }
 
         [[nodiscard]] std::optional<std::string> block_label() const {
             if (!empty()) {
-                if (const auto& label = front().get_if<ir::label>()) {
+                if (const auto &label = front().get_if<ir::label>()) {
                     return label->name;
                 }
             }
-            return {};
+            return std::nullopt;
         }
 
         [[nodiscard]] bool has_terminator() const {
@@ -72,15 +72,15 @@ namespace compiler::ir {
             const auto last_instruction = back();
 
 
-            if (const auto& jmp = last_instruction.get_if<ir::jump>()) {
+            if (const auto &jmp = last_instruction.get_if<ir::jump>()) {
                 return jmp->target_label.name;
             }
 
-            if (const auto& jmp = last_instruction.get_if<ir::jump_if_zero>()) {
+            if (const auto &jmp = last_instruction.get_if<ir::jump_if_zero>()) {
                 return jmp->target_label.name;
             }
 
-            if (const auto& jmp = last_instruction.get_if<ir::jump_if_not_zero>()) {
+            if (const auto &jmp = last_instruction.get_if<ir::jump_if_not_zero>()) {
                 return jmp->target_label.name;
             }
 
@@ -102,6 +102,5 @@ namespace compiler::ir {
         [[nodiscard]] auto end() {
             return instructions_.end();
         }
-
     };
 }

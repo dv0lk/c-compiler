@@ -3,6 +3,7 @@
 #include <unordered_set>
 
 #include "ir/types/basic_block_t.hpp"
+
 namespace compiler::cfg {
     // template<typename BlockType>
     struct Node {
@@ -42,7 +43,7 @@ namespace compiler::cfg {
 
         [[nodiscard]] bool empty() const {
             if (!has_block()) {
-                                return true;
+                return true;
             }
             return block->instructions().empty();
         }

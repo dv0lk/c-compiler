@@ -4,9 +4,9 @@
 
 
 namespace compiler::ir {
+    //TODO make actual virtual register or something, this kinda sucks rn
     class value_t {
     private:
-        //TODO we should add another type or something idk
         using constant_t = int;
         using variable_t = std::string;
 
@@ -15,17 +15,21 @@ namespace compiler::ir {
     public:
         value_t() = default;
 
+        //TODO figure this shit out, casuses compiler errors
+        // value_t & operator=(const value_t &other) = default;
+        // value_t & operator=(value_t &&other) = default;
+
         explicit value_t(constant_t constant)
             : value_(constant) {}
 
         explicit value_t(variable_t variable)
             : value_(std::move(variable)) {}
 
-        [[nodiscard]] constexpr bool is_constant() const noexcept {
+        [[nodiscard]] constexpr bool is_constant() const {
             return std::holds_alternative<constant_t>(value_);
         }
 
-        [[nodiscard]] constexpr bool is_variable() const noexcept {
+        [[nodiscard]] constexpr bool is_variable() const {
             return std::holds_alternative<variable_t>(value_);
         }
 
@@ -33,7 +37,7 @@ namespace compiler::ir {
             return std::get<constant_t>(value_);
         }
 
-        [[nodiscard]] variable_t get_variable() const {
+        [[nodiscard]] const variable_t& get_variable() const {
             return std::get<variable_t>(value_);
         }
 

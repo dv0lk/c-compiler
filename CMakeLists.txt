@@ -20,7 +20,7 @@ add_executable(compiler-rewrite src/main.cpp
         src/optimizations/optimizer.hpp
         src/optimizations/passes/constant_folding.hpp
         src/optimizations/passes/constant_folding.cpp
-        src/flow_graph/cfg.hpp
+        src/analysis/cfg.hpp
         src/optimizations/passes/unreachable_code_elem.cpp
         src/optimizations/passes/unreachable_code_elem.hpp
         src/optimizations/passes/copy_propagation.hpp
@@ -38,8 +38,14 @@ add_executable(compiler-rewrite src/main.cpp
         src/parser/ast/expr.hpp
         src/parser/ast/stmt.hpp
         src/ir/ir.hpp
-        src/flow_graph/adapter/ir_adapter.hpp
-        src/flow_graph/node_t.hpp
+        src/analysis/adapter/ir_adapter.hpp
+        src/analysis/node_t.hpp
+        src/transforms/manager.hpp
+        src/transforms/transform.hpp
+        src/transforms/transforms/constant_fold.hpp
+        src/transforms/transforms/copy_propagation.hpp
+        src/transforms/transforms/utils.hpp
+        src/transforms/transforms/unreachable_code_elem.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

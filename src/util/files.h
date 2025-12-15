@@ -8,7 +8,7 @@
 namespace files {
     inline std::optional<std::size_t> file_size(std::ifstream& file) {
         if (!file.good()) {
-            return {};
+            return std::nullopt;
         }
 
         file.seekg(0, std::ios::end);
@@ -20,7 +20,7 @@ namespace files {
     inline std::optional<std::vector<std::uint8_t> > read_file(const std::filesystem::path& path) {
         std::ifstream file(path, std::ios::binary);
         if (!file.good()) {
-            return {};
+            return std::nullopt;
         }
 
         std::vector<std::uint8_t> buffer(file_size(file).value());

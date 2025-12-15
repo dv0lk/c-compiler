@@ -84,15 +84,27 @@ namespace compiler::ir {
         explicit instruction(variant_t &&variant) : data_(std::move(variant)) {
         }
 
+        instruction(const instruction &other) = default;
+
+        instruction(instruction &&other) noexcept = default;
+
+        instruction& operator=(const instruction& other) = default;
+        instruction& operator=(instruction&& other) noexcept = default;
+
         bool operator==(const instruction &) const = default;
 
-        template<typename T>
+        template<typename... Ts>
         [[nodiscard]] constexpr bool holds() const noexcept {
-            return std::holds_alternative<T>(data_);
+            return (std::holds_alternative<Ts>(data_) || ...);
         }
 
         template<typename T>
         [[nodiscard]] const T *get_if() const {
+            return std::get_if<T>(&data_);
+        }
+
+        template<typename T>
+        [[nodiscard]] T *get_if() {
             return std::get_if<T>(&data_);
         }
 
@@ -101,8 +113,13 @@ namespace compiler::ir {
             return std::visit(std::forward<Visitor>(visitor), data_);
         }
 
+        template<typename Visitor>
+        auto visit(Visitor &&visitor) {
+            return std::visit(std::forward<Visitor>(visitor), data_);
+        }
+
         [[nodiscard]] bool is_terminator() const {
-            return holds<return_>() || holds<jump>() || holds<jump_if_zero>() || holds<jump_if_not_zero>();
+            return holds<return_, jump, jump_if_zero, jump_if_not_zero>();
         }
     };
 }

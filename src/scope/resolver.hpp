@@ -24,7 +24,7 @@ public:
 
     std::optional<int> declare(const std::string &name) {
         if (scopes.empty())
-            return {};
+            return std::nullopt;
 
         scopes.back()[name] = ++count;
         return count;
@@ -36,6 +36,6 @@ public:
                 return scope.at(name);
             }
         }
-        return {};
+        return std::nullopt;
     }
 };
