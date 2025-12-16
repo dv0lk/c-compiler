@@ -3,18 +3,16 @@
 
 #include "transforms/transform.hpp"
 #include "utils.hpp"
-#include "base/program.hpp"
-
 
 namespace compiler::transforms {
     template<typename InstrType>
-    class ConstantFolding : public Transform<std::vector<base::BasicBlock<ir::instruction>> > {
+    class ConstantFolding : public Transform<std::vector<BasicBlock<ir::instruction> > > {
     public:
         ConstantFolding() = default;
 
         ~ConstantFolding() override = default;
 
-        bool run(std::vector<base::BasicBlock<ir::instruction>> &blocks) override {
+        bool run(std::vector<BasicBlock<ir::instruction> > &blocks) override {
             bool changed = false;
             for (auto &block: blocks) {
                 for (auto &instr: block.instructions()) {
@@ -63,7 +61,7 @@ namespace compiler::transforms {
         }
 
         template<typename T>
-        static ir::instruction fold(const T &instr) {
+        static ir::instruction fold(const T &) {
             //should be unreachable
             throw std::runtime_error("Unsupported instruction for constant folding");
         }

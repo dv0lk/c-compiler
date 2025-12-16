@@ -7,7 +7,7 @@ namespace compiler {
     template<typename InstrType>
     class TransformManager {
     private:
-        using bb_t = std::vector<base::BasicBlock<InstrType>>;
+        using bb_t = std::vector<BasicBlock<InstrType>>;
         using transform_ptr = std::shared_ptr<Transform<bb_t>>;
         std::vector<transform_ptr> passes_;
     public:
@@ -21,7 +21,7 @@ namespace compiler {
             passes_.emplace_back(std::move(instance));
         }
 
-        bool run_on_function(base::Function<InstrType>& function) {
+        bool run_on_function(Function<InstrType>& function) {
             bool changed = false;
             for (auto& pass : passes_) {
                 changed |= pass->run(function.basic_blocks());
@@ -29,7 +29,7 @@ namespace compiler {
             return changed;
         }
 
-        bool run_on_program(base::Program<InstrType>& program) {
+        bool run_on_program(Program<InstrType>& program) {
             bool changed = false;
             for (auto& function : program) {
                 changed |= run_on_function(function);

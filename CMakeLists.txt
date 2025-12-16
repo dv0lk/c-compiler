@@ -25,7 +25,7 @@ add_executable(compiler-rewrite src/main.cpp
         src/backend/ir/types/virt_reg.hpp
         src/frontend/parser/ast/expr.hpp
         src/frontend/parser/ast/stmt.hpp
-        src/backend/ir/ir.hpp
+        src/backend/ir/types/ir.hpp
         src/backend/analysis/Node.hpp
         src/backend/transforms/manager.hpp
         src/backend/transforms/transform.hpp

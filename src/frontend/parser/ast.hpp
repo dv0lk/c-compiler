@@ -4,9 +4,6 @@
 #include "ast/stmt.hpp"
 
 
-#include "lexer/tokenizer.h"
-
-
 namespace compiler::ast {
     class parser {
     public:

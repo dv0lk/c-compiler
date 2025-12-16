@@ -198,10 +198,10 @@ namespace compiler::lexer {
             throw std::runtime_error("double/float values are currently unsupported");
             // auto value = std::stod(string_value);
             // add_token(token_type::DoubleLiteral, value);
-        } else {
-            int value = std::stoi(string_value);
-            add_token(token_t::IntLiteral, value);
         }
+
+        int value = std::stoi(string_value);
+        add_token(token_t::IntLiteral, value);
     }
 
     void tokenizer::consume_identifier() {

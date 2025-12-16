@@ -7,7 +7,7 @@
 namespace compiler {
     template<typename InstrType>
     struct Node {
-        using bb_t = base::BasicBlock<InstrType>;
+        using bb_t = BasicBlock<InstrType>;
 
         std::shared_ptr<bb_t> block;
         std::unordered_set<size_t> successors;

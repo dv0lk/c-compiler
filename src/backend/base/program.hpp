@@ -3,7 +3,7 @@
 #include <vector>
 #include "function.hpp"
 
-namespace compiler::base {
+namespace compiler {
     template<typename InstrType>
     class Program {
     private:

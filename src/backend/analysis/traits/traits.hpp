@@ -1,8 +1,7 @@
 #pragma once
-#include "ir/ir.hpp"
+#include "../../ir/types/ir.hpp"
 
-namespace compiler::base {
-
+namespace compiler {
 
     template<typename InstrType>
     struct InstructionTrait;

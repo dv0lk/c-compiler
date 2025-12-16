@@ -12,9 +12,9 @@ namespace compiler {
     template<typename InstrType>
     class CFG {
     public:
-        using traits = base::InstructionTrait<InstrType>;
-        using bb_t = base::BasicBlock<InstrType>;
-        using func_t = base::Function<InstrType>;
+        using traits = InstructionTrait<InstrType>;
+        using bb_t = BasicBlock<InstrType>;
+        using func_t = Function<InstrType>;
         using node_t = Node<InstrType>;
 
         static constexpr size_t START_NODE = 0;

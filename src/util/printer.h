@@ -13,7 +13,7 @@ namespace compiler::ir {
 
     class printer{
     public:
-        static std::string to_string(const base::Program<ir::instruction>& program) {
+        static std::string to_string(const Program<ir::instruction>& program) {
             std::stringstream ss;
             for (const auto &func: program.functions()) {
                 ss << "Function: " << func.name() << "\n";
@@ -24,11 +24,11 @@ namespace compiler::ir {
             return ss.str();
         }
 
-        static std::string to_string(const base::Function<instruction>& func) {
+        static std::string to_string(const Function<instruction>& func) {
             return to_string(func.basic_blocks());
         }
 
-        static std::string to_string(const std::vector<base::BasicBlock<instruction>> &blocks) {
+        static std::string to_string(const std::vector<BasicBlock<instruction>> &blocks) {
             std::stringstream ss;
             int count = 1;
             for (const auto &block: blocks) {

@@ -3,18 +3,18 @@
 #include <vector>
 
 #include "ir/util/resolver.hpp"
-#include "ir/ir.hpp"
+#include "types/ir.hpp"
 #include "parser/ast.hpp"
 #include "base/program.hpp"
 
 namespace compiler::ir {
     class emitter {
     public:
-        using program_t = base::Program<ir::instruction>;
-        using function_t = base::Function<ir::instruction>;
-        using bb_t = base::BasicBlock<ir::instruction>;
+        using program_t = Program<instruction>;
+        using function_t = Function<instruction>;
+        using bb_t = BasicBlock<instruction>;
 
-        base::Program<ir::instruction> emit(const std::vector<ast::stmt::stmt_ptr> &ast);
+        Program<instruction> emit(const std::vector<ast::stmt::stmt_ptr> &ast);
 
         [[nodiscard]] static program_t get_ir(const std::vector<ast::stmt::stmt_ptr> &ast) {
             emitter e;

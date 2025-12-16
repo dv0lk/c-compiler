@@ -5,7 +5,7 @@
 // we have a function add_instruction. And then this instruction decides if to start/terminate the block based on the current instruction
 // ????
 namespace compiler::ir {
-    base::Program<ir::instruction> emitter::emit(const std::vector<ast::stmt::stmt_ptr> &ast) {
+    Program<instruction> emitter::emit(const std::vector<ast::stmt::stmt_ptr> &ast) {
         for (const auto &stmt: ast) {
             emit_stmt(stmt);
         }

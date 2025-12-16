@@ -2,7 +2,7 @@
 #include <vector>
 #include "basic_block.hpp"
 
-namespace compiler::base {
+namespace compiler {
     template<typename InstrType>
     class BasicBlock {
     private:
