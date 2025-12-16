@@ -2,7 +2,7 @@
 #include <memory>
 #include <vector>
 #include "transform.hpp"
-
+#include "base/program.hpp"
 namespace compiler {
     template<typename InstrType>
     class TransformManager {
@@ -20,7 +20,7 @@ namespace compiler {
             passes_.emplace_back(std::move(instance));
         }
 
-        bool run_on_function(ir::function_t& function) {
+        bool run_on_function(base::Function<InstrType>& function) {
             bool changed = false;
             for (auto& pass : passes_) {
                 changed |= pass->run(function.blocks);
@@ -28,7 +28,7 @@ namespace compiler {
             return changed;
         }
 
-        bool run_on_program(ir::program_t& program) {
+        bool run_on_program(base::Program<InstrType>& program) {
             bool changed = false;
             for (auto& function : program) {
                 changed |= run_on_function(function);

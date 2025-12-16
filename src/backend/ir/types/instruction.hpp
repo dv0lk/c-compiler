@@ -4,35 +4,35 @@
 #include <variant>
 #include <vector>
 #include "lexer/token.h"
-#include "value_t.hpp"
+#include "virt_reg.hpp"
 
 namespace compiler::ir {
     struct return_ {
-        value_t value;
+        VirtualReg value;
 
         bool operator==(const return_ &) const = default;
     };
 
     struct binary {
         token_t op;
-        value_t left;
-        value_t right;
-        value_t result;
+        VirtualReg left;
+        VirtualReg right;
+        VirtualReg result;
 
         bool operator==(const binary &) const = default;
     };
 
     struct unary {
         token_t op;
-        value_t value;
-        value_t result;
+        VirtualReg value;
+        VirtualReg result;
 
         bool operator==(const unary &) const = default;
     };
 
     struct copy {
-        value_t destination;
-        value_t source;
+        VirtualReg destination;
+        VirtualReg source;
 
         bool operator==(const copy &) const = default;
     };
@@ -50,14 +50,14 @@ namespace compiler::ir {
     };
 
     struct jump_if_zero {
-        value_t condition;
+        VirtualReg condition;
         label target_label;
 
         bool operator==(const jump_if_zero &) const = default;
     };
 
     struct jump_if_not_zero {
-        value_t condition;
+        VirtualReg condition;
         label target_label;
 
         bool operator==(const jump_if_not_zero &) const = default;
@@ -65,12 +65,11 @@ namespace compiler::ir {
 
     struct func_call {
         std::string function_name;
-        std::vector<value_t> arguments;
-        value_t destination;
+        std::vector<VirtualReg> arguments;
+        VirtualReg destination;
 
         bool operator==(const func_call &) const = default;
     };
-
 
     class instruction {
     private:
@@ -78,7 +77,6 @@ namespace compiler::ir {
             jump_if_not_zero, func_call>;
 
         variant_t data_;
-
     public:
         //TODO add good constructors
         explicit instruction(variant_t &&variant) : data_(std::move(variant)) {
@@ -117,9 +115,6 @@ namespace compiler::ir {
         auto visit(Visitor &&visitor) {
             return std::visit(std::forward<Visitor>(visitor), data_);
         }
-
-        [[nodiscard]] bool is_terminator() const {
-            return holds<return_, jump, jump_if_zero, jump_if_not_zero>();
-        }
     };
+
 }

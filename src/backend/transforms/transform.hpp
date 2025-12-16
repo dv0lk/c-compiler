@@ -1,12 +1,12 @@
 #pragma once
 
-template<typename InstructionType>
+template<typename InstrType>
 class Transform {
 public:
     Transform() = default;
 
     virtual ~Transform() = default;
 
-    [[nodiscard]] virtual bool run(InstructionType& instructions) = 0;
+    [[nodiscard]] virtual bool run(InstrType& instructions) = 0;
 };
 

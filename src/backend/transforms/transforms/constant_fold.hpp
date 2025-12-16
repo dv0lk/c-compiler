@@ -3,16 +3,18 @@
 
 #include "transforms/transform.hpp"
 #include "utils.hpp"
+#include "base/program.hpp"
 
 
 namespace compiler::transforms {
-    class ConstantFolding : public Transform<std::vector<ir::basic_block_t> > {
+    template<typename InstrType>
+    class ConstantFolding : public Transform<std::vector<base::BasicBlock<InstrType>> > {
     public:
         ConstantFolding() = default;
 
         ~ConstantFolding() override = default;
 
-        bool run(std::vector<ir::basic_block_t> &blocks) override {
+        bool run(std::vector<base::BasicBlock<InstrType>> &blocks) override {
             bool changed = false;
             for (auto &block: blocks) {
                 for (auto &instr: block.instructions()) {
@@ -50,14 +52,14 @@ namespace compiler::transforms {
             const int rhs = binary.right.get_constant();
             const int constant = utils::evaluate_binary(binary.op, lhs, rhs);
 
-            return ir::instruction{ir::copy{binary.result, ir::value_t{constant}}};
+            return ir::instruction{ir::copy{binary.result, ir::VirtualReg{constant}}};
         }
 
         static ir::instruction fold(const ir::unary &binary) {
             const int value = binary.value.get_constant();
             const int constant = utils::evaluate_unary(value, binary.op);
 
-            return ir::instruction{ir::copy{binary.result, ir::value_t{constant}}};
+            return ir::instruction{ir::copy{binary.result, ir::VirtualReg{constant}}};
         }
 
         template<typename T>

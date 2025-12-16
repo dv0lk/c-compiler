@@ -5,7 +5,7 @@
 
 namespace compiler::ir {
     //TODO make actual virtual register or something, this kinda sucks rn
-    class value_t {
+    class VirtualReg {
     private:
         using constant_t = int;
         using variable_t = std::string;
@@ -13,16 +13,16 @@ namespace compiler::ir {
         std::variant<constant_t, variable_t> value_;
 
     public:
-        value_t() = default;
+        VirtualReg() = default;
 
         //TODO figure this shit out, casuses compiler errors
         // value_t & operator=(const value_t &other) = default;
         // value_t & operator=(value_t &&other) = default;
 
-        explicit value_t(constant_t constant)
+        explicit VirtualReg(constant_t constant)
             : value_(constant) {}
 
-        explicit value_t(variable_t variable)
+        explicit VirtualReg(variable_t variable)
             : value_(std::move(variable)) {}
 
         [[nodiscard]] constexpr bool is_constant() const {
@@ -48,6 +48,6 @@ namespace compiler::ir {
             return get_variable();
         }
 
-        bool operator==(const value_t& source) const = default;
+        bool operator==(const VirtualReg& source) const = default;
     };
 }

@@ -7,50 +7,43 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_executable(compiler-rewrite src/main.cpp
         src/util/files.h
-        src/lexer/Lexer.cpp
-        src/lexer/Lexer.h
-        src/lexer/Token.h
-        src/parser/ast.cpp
-        src/parser/ast.h
-        src/ir/types/instruction.hpp
-        src/ir/printer.h
-        src/ir/generator.cpp
-        src/ir/generator.h
-        src/scope/resolver.hpp
-        src/optimizations/optimizer.hpp
-        src/optimizations/passes/constant_folding.hpp
-        src/optimizations/passes/constant_folding.cpp
-        src/analysis/cfg.hpp
-        src/optimizations/passes/unreachable_code_elem.cpp
-        src/optimizations/passes/unreachable_code_elem.hpp
-        src/optimizations/passes/copy_propagation.hpp
-        src/optimizations/passes/copy_propagation.cpp
-        src/codegen/x86_instructions.hpp
-        src/codegen/code_generator.cpp
-        src/codegen/code_generator.hpp
+        src/frontend/lexer/Lexer.cpp
+        src/frontend/lexer/Lexer.h
+        src/frontend/lexer/Token.h
+        src/frontend/parser/ast.cpp
+        src/frontend/parser/ast.h
+        src/backend/ir/types/instruction.hpp
+        src/backend/ir/printer.h
+        src/backend/ir/ir_emitter.cpp
+        src/backend/ir/ir_emitter.h
+        src/backend/ir/util/resolver.hpp
+        src/backend/analysis/cfg.hpp
+        src/backend/codegen/x86_instructions.hpp
+        src/backend/codegen/code_generator.cpp
+        src/backend/codegen/code_generator.hpp
         src/compiler/compiler.cpp
         src/compiler/compiler.hpp
-        src/codegen/register.hpp
-        src/ir/types/basic_block_t.hpp
-        src/ir/types/basic_block_t.hpp
-        src/ir/types/value_t.hpp
-        src/parser/ast.hpp
-        src/parser/ast/expr.hpp
-        src/parser/ast/stmt.hpp
-        src/ir/ir.hpp
-        src/analysis/adapter/ir_adapter.hpp
-        src/analysis/node_t.hpp
-        src/transforms/manager.hpp
-        src/transforms/transform.hpp
-        src/transforms/transforms/constant_fold.hpp
-        src/transforms/transforms/copy_propagation.hpp
-        src/transforms/transforms/utils.hpp
-        src/transforms/transforms/unreachable_code_elem.hpp
-        src/ir/types/function_t.hpp
-        src/base/program.hpp
-        src/base/instruction.hpp
+        src/backend/codegen/register.hpp
+        src/backend/ir/types/virt_reg.hpp
+        src/frontend/parser/ast.hpp
+        src/frontend/parser/ast/expr.hpp
+        src/frontend/parser/ast/stmt.hpp
+        src/backend/ir/ir.hpp
+        src/backend/analysis/Node.hpp
+        src/backend/transforms/manager.hpp
+        src/backend/transforms/transform.hpp
+        src/backend/transforms/transforms/constant_fold.hpp
+        src/backend/transforms/transforms/copy_propagation.hpp
+        src/backend/transforms/transforms/utils.hpp
+        src/backend/transforms/transforms/unreachable_code_elem.hpp
+        src/backend/base/program.hpp
+        src/backend/analysis/traits/traits.hpp
+        src/backend/base/basic_block.hpp
+        src/backend/base/function.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src
-                    ${CMAKE_CURRENT_SOURCE_DIR}/util
+        ${CMAKE_CURRENT_SOURCE_DIR}/util
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/frontend
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/backend
 )

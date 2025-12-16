@@ -2,18 +2,20 @@
 #include <memory>
 #include <unordered_set>
 
-#include "ir/types/basic_block_t.hpp"
+#include "base/program.hpp"
 
-namespace compiler::cfg {
-    // template<typename BlockType>
+namespace compiler {
+    template<typename InstrType>
     struct Node {
-        std::shared_ptr<ir::basic_block_t> block;
+        using BBType = base::BasicBlock<InstrType>;
+
+        std::shared_ptr<BBType> block;
         std::unordered_set<size_t> successors;
         std::unordered_set<size_t> predecessors;
 
         Node() = default;
 
-        explicit Node(const ir::basic_block_t &block) : block(std::make_shared<ir::basic_block_t>(block)) {
+        explicit Node(const BBType &block) : block(std::make_shared<BBType>(block)) {
         }
 
         void add_successor(const size_t id) {

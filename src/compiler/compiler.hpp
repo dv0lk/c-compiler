@@ -1,16 +1,15 @@
 #pragma once
-#include "codegen/code_generator.hpp"
-#include "ir/generator.h"
+#include "ir/ir_emitter.h"
 #include "lexer/lexer.h"
-#include "optimizations/optimizer.hpp"
 #include "parser/ast.h"
 
 namespace compiler {
     class Compiler {
     private:
+        //TODO make all of these static
         lexer::lexer lexer;
         ast::parser parser;
-        ir::generator ir_generator;
+        ir::emitter ir_generator;
         // Optimizer optimizer;
         // CodeGenerator code_generator;
 

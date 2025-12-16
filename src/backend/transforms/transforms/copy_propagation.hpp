@@ -1,18 +1,18 @@
 #pragma once
-#include <map>
 #include <vector>
 
 #include "transforms/transform.hpp"
 #include "ir/ir.hpp"
 
 namespace compiler::transforms {
-    class CopyPropagation : public Transform<std::vector<ir::basic_block_t> > {
+    template<typename InstrType>
+    class CopyPropagation : public Transform<std::vector<base::BasicBlock<InstrType>> > {
     public:
         CopyPropagation() = default;
 
         ~CopyPropagation() override = default;
 
-        bool run(std::vector<ir::basic_block_t> &blocks) override {
+        bool run(std::vector<base::BasicBlock<InstrType>> &blocks) override {
             bool changed = false;
 
             for (const auto &block: blocks) {
@@ -31,7 +31,7 @@ namespace compiler::transforms {
         std::unordered_map<std::string, std::string> copy_map_;
 
 
-        void find_all_copies(const ir::basic_block_t &block) {
+        void find_all_copies(const base::BasicBlock<InstrType> &block) {
             for (auto &instr: block.instructions()) {
                 if (const auto copy = instr.get_if<ir::copy>()) {
                     auto destination_value = copy->destination;
@@ -53,7 +53,7 @@ namespace compiler::transforms {
             }
         }
 
-        bool replace_copies(ir::basic_block_t &block) {
+        bool replace_copies(base::BasicBlock<InstrType> &block) {
             bool changed = false;
             for (auto &instr: block.instructions()) {
                 auto new_instr = instr.visit([this](auto &i) { return propagate(i); });
@@ -108,16 +108,16 @@ namespace compiler::transforms {
             // }
         }
 
-        std::optional<ir::value_t> replace_operand(ir::value_t &operand) {
+        std::optional<ir::VirtualReg> replace_operand(ir::VirtualReg &operand) {
             if (operand.is_constant() || !copy_map_.contains(operand.get_variable())) {
                 return {};
             }
 
-            return ir::value_t{copy_map_[operand.get_variable()]};
+            return ir::VirtualReg{copy_map_[operand.get_variable()]};
         }
 
         std::optional<ir::instruction> propagate(const ir::copy &copy) {
-            ir::value_t source = copy.source;
+            ir::VirtualReg source = copy.source;
 
             const auto new_source = replace_operand(source);
 
@@ -129,8 +129,8 @@ namespace compiler::transforms {
         }
 
         std::optional<ir::instruction> propagate(const ir::binary &binary) {
-            ir::value_t left = binary.left;
-            ir::value_t right = binary.right;
+            ir::VirtualReg left = binary.left;
+            ir::VirtualReg right = binary.right;
 
             const auto new_left = replace_operand(left);
             const auto new_right = replace_operand(right);
@@ -144,7 +144,7 @@ namespace compiler::transforms {
 
 
         std::optional<ir::instruction> propagate(const ir::unary &unary) {
-            ir::value_t operand = unary.value;
+            ir::VirtualReg operand = unary.value;
 
             const auto new_operand = replace_operand(operand);
 
@@ -156,7 +156,7 @@ namespace compiler::transforms {
         }
 
         std::optional<ir::instruction> propagate(const ir::return_ &ret) {
-            ir::value_t value = ret.value;
+            ir::VirtualReg value = ret.value;
 
             const auto new_value = replace_operand(value);
 
