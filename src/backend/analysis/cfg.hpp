@@ -4,17 +4,17 @@
 #include <ranges>
 #include <unordered_set>
 
-#include "Node.hpp"
+#include "node.hpp"
 #include "traits/traits.hpp"
 
 namespace compiler {
     template<typename InstrType>
     class CFG {
     public:
-        using Traits = base::InstructionTrait<InstrType>;
-        using BlockType = base::BasicBlock<InstrType>;
-        using FunctionType = base::Function<InstrType>;
-        using NodeType = Node<InstrType>;
+        using traits = base::InstructionTrait<InstrType>;
+        using bb_t = base::BasicBlock<InstrType>;
+        using func_t = base::Function<InstrType>;
+        using node_t = Node<InstrType>;
 
         static constexpr size_t START_NODE = 0;
         static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
@@ -23,7 +23,7 @@ namespace compiler {
     private:
         //TODO should probably do something better
         std::string name_;
-        std::unordered_map<size_t, NodeType> nodes_;
+        std::unordered_map<size_t, node_t> nodes_;
         std::unordered_map<std::string, size_t> label_cache_;
         size_t next_node_id_ = 0;
 
@@ -58,9 +58,9 @@ namespace compiler {
             node_to->remove_predecessor(from);
         }
 
-        void build_nodes(const std::span<const BlockType> &blocks) {
-            nodes_[START_NODE] = NodeType{};
-            nodes_[EXIT_NODE] = NodeType{};
+        void build_nodes(const std::span<const bb_t> &blocks) {
+            nodes_[START_NODE] = node_t{};
+            nodes_[EXIT_NODE] = node_t{};
 
             std::vector<size_t> block_ids;
 
@@ -97,33 +97,33 @@ namespace compiler {
                     continue;
                 }
 
-                const auto& last_instruction = curr_block->instructions().back();
+                const auto &last_instruction = curr_block->instructions().back();
 
-                if (!Traits::is_terminator(last_instruction)) {
+                if (!traits::is_terminator(last_instruction)) {
                     add_edge(current_id, node_ids[i + 1]);
                     continue;
                 }
 
-                if (Traits::is_return(last_instruction)) {
+                if (traits::is_return(last_instruction)) {
                     add_edge(current_id, EXIT_NODE);
                     continue;
                 }
 
-                if (Traits::is_unconditional_jump(last_instruction)) {
-                    auto label = Traits::get_jump_target(last_instruction);
+                if (traits::is_unconditional_jump(last_instruction)) {
+                    auto label = traits::get_jump_target(last_instruction);
                     add_edge(current_id, find_by_label(label));
                     continue;
                 }
 
-                if (Traits::is_conditional_jump(last_instruction)) {
-                    auto label = Traits::get_jump_target(last_instruction);
+                if (traits::is_conditional_jump(last_instruction)) {
+                    auto label = traits::get_jump_target(last_instruction);
                     add_edge(current_id, find_by_label(label));
                     add_edge(current_id, node_ids[i + 1]);
                 }
             }
         }
 
-        [[nodiscard]] NodeType *find_node(const std::size_t id) {
+        [[nodiscard]] node_t *find_node(const std::size_t id) {
             const auto it = nodes_.find(id);
             return it != nodes_.end() ? &it->second : nullptr;
         }
@@ -136,13 +136,12 @@ namespace compiler {
             throw std::runtime_error("Encountered label that was not in cache");
         }
 
-        size_t add_node(const BlockType &block) {
+        size_t add_node(const bb_t &block) {
             const size_t id = next_node_id_++;
 
-            // label_cache_[block.name()] = id;
             //cache label, labels should always be the first instruction in bb
-            if (!block.empty() && Traits::is_label(block.instructions().front())) {
-                const auto &label = Traits::get_label_name(block.instructions().front());
+            if (!block.empty() && traits::is_label(block.instructions().front())) {
+                const auto &label = traits::get_label_name(block.instructions().front());
                 label_cache_[label] = id;
             }
 
@@ -150,14 +149,13 @@ namespace compiler {
             return id;
         }
 
-        static CFG from_bbs(const std::span<const BlockType>& blocks) {
+        static CFG from_bbs(const std::span<const bb_t> &blocks) {
             CFG cfg;
             cfg.build_nodes(blocks);
             return cfg;
         }
 
-        // template<typename InstrType>
-        static CFG from_function(const FunctionType& function) {
+        static CFG from_function(const func_t &function) {
             return from_bbs(function.basic_blocks());
         }
     };

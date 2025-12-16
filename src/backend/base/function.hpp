@@ -35,11 +35,11 @@ namespace compiler::base {
             return params_;
         }
 
-        [[nodiscard]] std::span<BasicBlock<InstrType> > basic_blocks() {
+        [[nodiscard]] std::vector<BasicBlock<InstrType> >& basic_blocks() {
             return basic_blocks_;
         }
 
-        [[nodiscard]] std::span<const BasicBlock<InstrType>> basic_blocks() const {
+        [[nodiscard]] const std::vector<BasicBlock<InstrType> >& basic_blocks() const {
             return basic_blocks_;
         }
 

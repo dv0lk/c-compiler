@@ -18,14 +18,14 @@ namespace compiler::base {
 
         template<typename T>
         void add_instruction(T &&instruction) {
-            instructions_.emplace_back(std::move(instruction));
+            instructions_.emplace_back(std::forward<T>(instruction));
         }
 
-        [[nodiscard]] std::span<InstrType> instructions() {
+        [[nodiscard]] std::vector<InstrType>& instructions() {
             return instructions_;
         }
 
-        [[nodiscard]] std::span<const InstrType> instructions() const {
+        [[nodiscard]] const std::vector<InstrType>& instructions() const {
             return instructions_;
         }
 

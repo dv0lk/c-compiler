@@ -10,15 +10,21 @@
 namespace compiler::ir {
     class emitter {
     public:
-        using Program = base::Program<ir::instruction>;
-        using Function = base::Function<ir::instruction>;
-        using BasicBlock = base::BasicBlock<ir::instruction>;
+        using program_t = base::Program<ir::instruction>;
+        using function_t = base::Function<ir::instruction>;
+        using bb_t = base::BasicBlock<ir::instruction>;
 
-        base::Program<ir::instruction> generate(const std::vector<ast::stmt::stmt_ptr> &ast);
+        base::Program<ir::instruction> emit(const std::vector<ast::stmt::stmt_ptr> &ast);
+
+        [[nodiscard]] static program_t get_ir(const std::vector<ast::stmt::stmt_ptr> &ast) {
+            emitter e;
+            return e.emit(ast);
+        }
+
     private:
-        Program program_;
-        Function current_function_;
-        BasicBlock current_block_;
+        program_t program_;
+        function_t current_function_;
+        bb_t current_block_;
 
         Resolver resolver_;
 
@@ -34,7 +40,7 @@ namespace compiler::ir {
         void finalize_current_block();
 
         //finalize current block and start new block with provided label
-        void start_new_bb(const std::string& label);
+        void start_new_bb(const std::string &label);
 
         std::string make_tmp_var();
 

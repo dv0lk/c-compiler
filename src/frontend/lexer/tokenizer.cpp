@@ -1,11 +1,11 @@
-#include "lexer.h"
+#include "tokenizer.h"
 
 #include <iostream>
 #include <stdexcept>
 
 namespace compiler::lexer {
-    std::vector<token> lexer::parse_tokens(const std::string& input) {
-        this->source = input;
+    std::vector<token> tokenizer::parse_tokens(const std::string& source) {
+        this->source = source;
 
         while (!is_end()) {
             start_position = current_position;
@@ -14,7 +14,7 @@ namespace compiler::lexer {
         return this->tokens;
     }
 
-    void lexer::print_tokens() const {
+    void tokenizer::print_tokens() const {
         if (this->tokens.empty()) {
             std::cout << "No tokens to print\n";
             return;
@@ -27,7 +27,7 @@ namespace compiler::lexer {
         }
     }
 
-    void lexer::lex() {
+    void tokenizer::lex() {
         const char c = peek();
         advance();
 
@@ -114,26 +114,26 @@ namespace compiler::lexer {
         }
     }
 
-    bool lexer::is_end() const {
+    bool tokenizer::is_end() const {
         return current_position >= source.size();
     }
 
-    bool lexer::is_alpha(const char c) {
+    bool tokenizer::is_alpha(const char c) {
         return std::isalpha(c) || c == '_';
     }
 
-    char lexer::peek() const {
+    char tokenizer::peek() const {
         return source[current_position];
     }
 
-    char lexer::peek_next() const {
+    char tokenizer::peek_next() const {
         if (is_end()) {
             return '\0';
         }
         return source[current_position + 1];
     }
 
-    bool lexer::match_next(const char c) {
+    bool tokenizer::match_next(const char c) {
         const bool match = peek() == c;
         if (match) {
             advance();
@@ -141,21 +141,21 @@ namespace compiler::lexer {
         return match;
     }
 
-    void lexer::advance() {
+    void tokenizer::advance() {
         current_position++;
     }
 
-    std::string lexer::get_lexeme() const {
+    std::string tokenizer::get_lexeme() const {
         return source.substr(start_position, current_position - start_position);
     }
 
-    void lexer::add_token(token_t type, std::optional<int> literal) {
+    void tokenizer::add_token(token_t type, std::optional<int> literal) {
         tokens.emplace_back(type, get_lexeme(), literal);
     }
 
 
     //todo handle stirng literals
-    void lexer::consume_string() {
+    void tokenizer::consume_string() {
         while (peek() != '"' && !is_end()) {
             //todo maybe think about adding line support
             // if (peek() == '\n') {
@@ -175,7 +175,7 @@ namespace compiler::lexer {
     }
 
     //todo handle double/float values
-    void lexer::consume_digit() {
+    void tokenizer::consume_digit() {
         bool is_decimal = false;
 
         while (isdigit(peek())) {
@@ -204,7 +204,7 @@ namespace compiler::lexer {
         }
     }
 
-    void lexer::consume_identifier() {
+    void tokenizer::consume_identifier() {
         while (is_alpha(peek()) || isdigit(peek())) {
             advance();
         }
@@ -220,13 +220,13 @@ namespace compiler::lexer {
         add_token(type);
     }
 
-    void lexer::skip_line() {
+    void tokenizer::skip_line() {
         while (peek() != '\n' && !is_end()) {
             advance();
         }
     }
 
-    void lexer::skip_multiline_comment() {
+    void tokenizer::skip_multiline_comment() {
         while (!is_end()) {
             if (peek() == '*' && peek_next() == '/') {
                 advance();
@@ -240,7 +240,7 @@ namespace compiler::lexer {
         }
     }
 
-    token_t lexer::keyword_or_identifier(const std::string& str) {
+    token_t tokenizer::keyword_or_identifier(const std::string& str) {
         static const std::unordered_map<std::string_view, token_t> keywords = {
             {"break", token_t::Break},
             {"continue", token_t::Continue},

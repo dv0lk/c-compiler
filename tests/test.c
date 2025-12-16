@@ -1,10 +1,8 @@
-int main(){
-    int x = 1;
-    if (x == 1) {
-        return 1;
-    } else {
-        x = 2;
-    }
 
-    return x;
+
+int main(){
+    int a = 50 + 50;
+    int b = a;
+    int c = b;
+    return c;
 }

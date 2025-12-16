@@ -7,25 +7,22 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_executable(compiler-rewrite src/main.cpp
         src/util/files.h
-        src/frontend/lexer/Lexer.cpp
-        src/frontend/lexer/Lexer.h
+        src/frontend/lexer/tokenizer.cpp
+        src/frontend/lexer/tokenizer.h
         src/frontend/lexer/Token.h
         src/frontend/parser/ast.cpp
-        src/frontend/parser/ast.h
+        src/frontend/parser/ast.hpp
         src/backend/ir/types/instruction.hpp
-        src/backend/ir/printer.h
+        src/util/printer.h
         src/backend/ir/ir_emitter.cpp
         src/backend/ir/ir_emitter.h
         src/backend/ir/util/resolver.hpp
-        src/backend/analysis/cfg.hpp
+        src/backend/analysis/CFG.hpp
         src/backend/codegen/x86_instructions.hpp
         src/backend/codegen/code_generator.cpp
         src/backend/codegen/code_generator.hpp
-        src/compiler/compiler.cpp
-        src/compiler/compiler.hpp
         src/backend/codegen/register.hpp
         src/backend/ir/types/virt_reg.hpp
-        src/frontend/parser/ast.hpp
         src/frontend/parser/ast/expr.hpp
         src/frontend/parser/ast/stmt.hpp
         src/backend/ir/ir.hpp

@@ -7,15 +7,15 @@
 namespace compiler {
     template<typename InstrType>
     struct Node {
-        using BBType = base::BasicBlock<InstrType>;
+        using bb_t = base::BasicBlock<InstrType>;
 
-        std::shared_ptr<BBType> block;
+        std::shared_ptr<bb_t> block;
         std::unordered_set<size_t> successors;
         std::unordered_set<size_t> predecessors;
 
         Node() = default;
 
-        explicit Node(const BBType &block) : block(std::make_shared<BBType>(block)) {
+        explicit Node(const bb_t &block) : block(std::make_shared<bb_t>(block)) {
         }
 
         void add_successor(const size_t id) {

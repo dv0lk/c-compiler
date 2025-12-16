@@ -5,9 +5,14 @@
 #include "token.h"
 
 namespace compiler::lexer {
-    class lexer {
+    class tokenizer {
     public:
-        [[nodiscard]] std::vector<token> parse_tokens(const std::string& input);
+        [[nodiscard]] std::vector<token> parse_tokens(const std::string& source);
+
+        [[nodiscard]] static std::vector<token> get_tokens(const std::string& source) {
+            tokenizer t;
+            return t.parse_tokens(source);
+        }
 
         void print_tokens() const;
 
