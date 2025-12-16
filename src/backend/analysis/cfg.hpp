@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <ranges>
+#include <stdexcept>
 #include <unordered_set>
 
 #include "node.hpp"

@@ -6,13 +6,13 @@
 
 namespace compiler::transforms {
     template<typename InstrType>
-    class CopyPropagation : public Transform<std::vector<base::BasicBlock<InstrType>> > {
+    class CopyPropagation : public Transform<std::vector<base::BasicBlock<ir::instruction>> > {
     public:
         CopyPropagation() = default;
 
         ~CopyPropagation() override = default;
 
-        bool run(std::vector<base::BasicBlock<InstrType>> &blocks) override {
+        bool run(std::vector<base::BasicBlock<ir::instruction>> &blocks) override {
             bool changed = false;
 
             for (const auto &block: blocks) {
@@ -30,8 +30,7 @@ namespace compiler::transforms {
         // dest -> src
         std::unordered_map<std::string, std::string> copy_map_;
 
-
-        void find_all_copies(const base::BasicBlock<InstrType> &block) {
+        void find_all_copies(const base::BasicBlock<ir::instruction> &block) {
             for (auto &instr: block.instructions()) {
                 if (const auto copy = instr.get_if<ir::copy>()) {
                     auto destination_value = copy->destination;
@@ -53,7 +52,7 @@ namespace compiler::transforms {
             }
         }
 
-        bool replace_copies(base::BasicBlock<InstrType> &block) {
+        bool replace_copies(base::BasicBlock<ir::instruction> &block) {
             bool changed = false;
             for (auto &instr: block.instructions()) {
                 auto new_instr = instr.visit([this](auto &i) { return propagate(i); });
@@ -136,7 +135,7 @@ namespace compiler::transforms {
             const auto new_right = replace_operand(right);
 
             if (new_left.has_value() || new_right.has_value()) {
-                return ir::instruction{ir::binary{binary.op, new_left.value(), new_right.value(), binary.result}};
+                return ir::instruction{ir::binary{binary.op, new_left.value_or(left), new_right.value_or(right), binary.result}};
             }
 
             return {};

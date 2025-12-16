@@ -8,13 +8,13 @@
 
 namespace compiler::transforms {
     template<typename InstrType>
-    class ConstantFolding : public Transform<std::vector<base::BasicBlock<InstrType>> > {
+    class ConstantFolding : public Transform<std::vector<base::BasicBlock<ir::instruction>> > {
     public:
         ConstantFolding() = default;
 
         ~ConstantFolding() override = default;
 
-        bool run(std::vector<base::BasicBlock<InstrType>> &blocks) override {
+        bool run(std::vector<base::BasicBlock<ir::instruction>> &blocks) override {
             bool changed = false;
             for (auto &block: blocks) {
                 for (auto &instr: block.instructions()) {

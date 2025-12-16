@@ -39,6 +39,7 @@ namespace compiler::ir {
     void emitter::start_new_bb(const std::string& label) {
         finalize_current_block();
         current_block_ = bb_t{};
+        current_block_.add_instruction(ir::label(label));
     }
 
     [[nodiscard]] std::string emitter::make_tmp_var() {

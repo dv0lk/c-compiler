@@ -4,7 +4,6 @@
 
 
 namespace compiler::ir {
-    //TODO make actual virtual register or something, this kinda sucks rn
     class VirtualReg {
     private:
         using constant_t = int;
@@ -14,10 +13,6 @@ namespace compiler::ir {
 
     public:
         VirtualReg() = default;
-
-        //TODO figure this shit out, casuses compiler errors
-        // value_t & operator=(const value_t &other) = default;
-        // value_t & operator=(value_t &&other) = default;
 
         explicit VirtualReg(constant_t constant)
             : value_(constant) {}
