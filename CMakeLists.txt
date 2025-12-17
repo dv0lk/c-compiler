@@ -37,6 +37,23 @@ add_executable(compiler-rewrite src/main.cpp
         src/backend/analysis/traits/traits.hpp
         src/backend/base/basic_block.hpp
         src/backend/base/function.hpp
+        src/backend/ir/types/types.hpp
+        src/backend/x86/types/instruction.hpp
+        src/backend/x86/types/operand/register.hpp
+        src/backend/x86/types/operand/operand.hpp
+        src/backend/x86/util/util.hpp
+        src/backend/x86/types/operand/label.hpp
+        src/backend/x86/types/operand/mem.hpp
+        src/backend/x86/types/operand/imm.hpp
+        src/backend/x86/types/mnemonic.hpp
+        src/backend/x86/types/condition_code.hpp
+        src/backend/x86/x86_emitter.hpp
+        src/backend/base/base.hpp
+        src/backend/x86/x86_emitter.cpp
+        src/util/x86_printer.hpp
+        src/backend/analysis/traits/ir.hpp
+        src/backend/analysis/traits/x86.hpp
+        src/backend/analysis/liveness.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

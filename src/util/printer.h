@@ -98,7 +98,7 @@ namespace compiler::ir {
         }
 
         static std::string to_string(const jump &jump) {
-            return std::format("jump {}", jump.target_label.name);
+            return std::format("jump {}", jump.target.name);
         }
 
         static std::string to_string(const jump_if_zero &jump) {

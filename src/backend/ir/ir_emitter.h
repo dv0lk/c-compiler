@@ -10,9 +10,9 @@
 namespace compiler::ir {
     class emitter {
     public:
-        using program_t = Program<instruction>;
-        using function_t = Function<instruction>;
-        using bb_t = BasicBlock<instruction>;
+        using program_t = Program<ir::instruction>;
+        using function_t = Function<ir::instruction>;
+        using bb_t = BasicBlock<ir::instruction>;
 
         Program<instruction> emit(const std::vector<ast::stmt::stmt_ptr> &ast);
 
@@ -24,7 +24,7 @@ namespace compiler::ir {
     private:
         program_t program_;
         function_t current_function_;
-        bb_t current_block_;
+        bb_t current_bb_;
 
         Resolver resolver_;
 

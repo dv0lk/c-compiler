@@ -31,8 +31,12 @@ namespace compiler {
     public:
         CFG() = default;
 
-        auto get_nodes() {
+        [[nodiscard]] auto get_nodes() {
             return std::views::values(nodes_);
+        }
+
+        [[nodiscard]] auto get_block_ids() {
+            return std::views::keys(nodes_);
         }
 
         void add_edge(size_t from, size_t to) {
@@ -124,7 +128,7 @@ namespace compiler {
             }
         }
 
-        [[nodiscard]] node_t *find_node(const std::size_t id) {
+        [[nodiscard]] node_t* find_node(const std::size_t id) {
             const auto it = nodes_.find(id);
             return it != nodes_.end() ? &it->second : nullptr;
         }

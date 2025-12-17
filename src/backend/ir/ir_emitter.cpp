@@ -14,9 +14,9 @@ namespace compiler::ir {
     }
 
     void emitter::finalize_current_function() {
-        if (!current_block_.empty()) {
-            current_function_.add_basic_block(std::move(current_block_));
-            current_block_ = {};
+        if (!current_bb_.empty()) {
+            current_function_.add_basic_block(std::move(current_bb_));
+            current_bb_ = {};
         }
 
         if (!current_function_.empty()) {
@@ -31,15 +31,15 @@ namespace compiler::ir {
     }
 
     void emitter::finalize_current_block() {
-        if (!current_block_.empty()) {
-            current_function_.add_basic_block(std::move(current_block_));
+        if (!current_bb_.empty()) {
+            current_function_.add_basic_block(std::move(current_bb_));
         }
     }
 
     void emitter::start_new_bb(const std::string& label) {
         finalize_current_block();
-        current_block_ = bb_t{};
-        current_block_.add_instruction(ir::label(label));
+        current_bb_ = bb_t{};
+        current_bb_.add_instruction(ir::label(label));
     }
 
     [[nodiscard]] std::string emitter::make_tmp_var() {
@@ -62,7 +62,7 @@ namespace compiler::ir {
 
     void emitter::emit_stmt(const ast::stmt::return_ &ret) {
         const auto ret_value = emit_expr(ret.value);
-        current_block_.add_instruction(return_{ret_value});
+        current_bb_.add_instruction(return_{ret_value});
     }
 
     //TODO uhh is this a bug?
@@ -90,7 +90,7 @@ namespace compiler::ir {
         const std::string else_label = stmt.else_branch.has_value() ? make_label("if_else") : end_label;
 
         const VirtualReg cond = emit_expr(stmt.condition);
-        current_block_.add_instruction(jump_if_zero{cond, label{else_label}});
+        current_bb_.add_instruction(jump_if_zero{cond, label{else_label}});
 
         start_new_bb(then_label);
 
@@ -98,7 +98,7 @@ namespace compiler::ir {
         if (stmt.else_branch.has_value()) {
             start_new_bb(else_label);
             emit_stmt(stmt.else_branch.value());
-            current_block_.add_instruction(jump{label{end_label}});
+            current_bb_.add_instruction(jump{label{end_label}});
         }
         start_new_bb(end_label);
     }
@@ -108,16 +108,16 @@ namespace compiler::ir {
         const std::string body_label = make_label("while_body");
         const std::string end_label = make_label("while_end");
 
-        current_block_.add_instruction(jump{cond_label});
+        current_bb_.add_instruction(jump{cond_label});
 
         start_new_bb(cond_label);
         const VirtualReg condition = emit_expr(stmt.condition);
-        current_block_.add_instruction(jump_if_zero{condition, end_label});
-        current_block_.add_instruction(jump{body_label});
+        current_bb_.add_instruction(jump_if_zero{condition, end_label});
+        current_bb_.add_instruction(jump{body_label});
 
         start_new_bb(body_label);
         emit_stmt(stmt.body);
-        current_block_.add_instruction(jump{cond_label});
+        current_bb_.add_instruction(jump{cond_label});
 
         start_new_bb(end_label);
     }
@@ -149,7 +149,7 @@ namespace compiler::ir {
         if (variable.initializer.has_value()) {
             const auto rhs = emit_expr(variable.initializer.value());
             const auto lhs = VirtualReg{make_variable_name(variable.name, scope_id.value())};
-            current_block_.add_instruction(copy{lhs, rhs});
+            current_bb_.add_instruction(copy{lhs, rhs});
             return;
         }
 
@@ -182,7 +182,7 @@ namespace compiler::ir {
         const VirtualReg right = emit_expr(expr.right);
         VirtualReg result{make_tmp_var()};
 
-        current_block_.add_instruction(binary{expr.op, left, right, result});
+        current_bb_.add_instruction(binary{expr.op, left, right, result});
         return result;
     }
 
@@ -190,7 +190,7 @@ namespace compiler::ir {
         const VirtualReg operand = emit_expr(expr.value);
         VirtualReg result{make_tmp_var()};
 
-        current_block_.add_instruction(unary{expr.op, operand, result});
+        current_bb_.add_instruction(unary{expr.op, operand, result});
         return result;
     }
 
@@ -207,7 +207,7 @@ namespace compiler::ir {
         }
 
         VirtualReg destination{make_variable_name(expr.name, resolved.value())};
-        current_block_.add_instruction(copy{destination, value});
+        current_bb_.add_instruction(copy{destination, value});
         return destination;
     }
 
@@ -219,25 +219,25 @@ namespace compiler::ir {
         VirtualReg result{make_tmp_var()};
 
         if (expr.op == token_t::LogicalAnd) {
-            current_block_.add_instruction(jump_if_zero{left, short_circuit_label});
+            current_bb_.add_instruction(jump_if_zero{left, short_circuit_label});
 
             const VirtualReg right = emit_expr(expr.right);
-            current_block_.add_instruction(copy{result, right});
-            current_block_.add_instruction(jump{end_label});
+            current_bb_.add_instruction(copy{result, right});
+            current_bb_.add_instruction(jump{end_label});
 
             start_new_bb(short_circuit_label);
-            current_block_.add_instruction(copy{result, VirtualReg(0)});
+            current_bb_.add_instruction(copy{result, VirtualReg(0)});
 
             start_new_bb(end_label);
         } else if (expr.op == token_t::LogicalOr) {
-            current_block_.add_instruction(jump_if_not_zero{left, short_circuit_label});
+            current_bb_.add_instruction(jump_if_not_zero{left, short_circuit_label});
 
             const VirtualReg right = emit_expr(expr.right);
-            current_block_.add_instruction(copy{result, right});
-            current_block_.add_instruction(jump{end_label});
+            current_bb_.add_instruction(copy{result, right});
+            current_bb_.add_instruction(jump{end_label});
 
             start_new_bb(short_circuit_label);
-            current_block_.add_instruction(copy{result, VirtualReg(1)});
+            current_bb_.add_instruction(copy{result, VirtualReg(1)});
 
             start_new_bb(end_label);
         }
@@ -252,7 +252,7 @@ namespace compiler::ir {
         }
 
         VirtualReg result{make_tmp_var()};
-        current_block_.add_instruction(func_call{expr.identifier, arguments, result});
+        current_bb_.add_instruction(func_call{expr.identifier, arguments, result});
 
         return result;
     }

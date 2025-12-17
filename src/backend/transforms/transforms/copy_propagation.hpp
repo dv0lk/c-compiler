@@ -13,16 +13,16 @@ namespace compiler::transforms {
         ~CopyPropagation() override = default;
 
         bool run(std::vector<BasicBlock<ir::instruction>> &blocks) override {
-            bool changed = false;
+            copy_map_.clear();
 
             for (const auto &block: blocks) {
                 find_all_copies(block);
             }
 
+            bool changed = false;
             for (auto &block: blocks) {
                 changed |= replace_copies(block);
             }
-
             return changed;
         }
 
@@ -109,7 +109,7 @@ namespace compiler::transforms {
 
         std::optional<ir::VirtualReg> replace_operand(ir::VirtualReg &operand) {
             if (operand.is_constant() || !copy_map_.contains(operand.get_variable())) {
-                return {};
+                return std::nullopt;
             }
 
             return ir::VirtualReg{copy_map_[operand.get_variable()]};
@@ -124,7 +124,7 @@ namespace compiler::transforms {
                 return ir::instruction{ir::copy{copy.destination, new_source.value()}};
             }
 
-            return {};
+            return std::nullopt;
         }
 
         std::optional<ir::instruction> propagate(const ir::binary &binary) {
@@ -138,7 +138,7 @@ namespace compiler::transforms {
                 return ir::instruction{ir::binary{binary.op, new_left.value_or(left), new_right.value_or(right), binary.result}};
             }
 
-            return {};
+            return std::nullopt;
         }
 
 
@@ -151,7 +151,7 @@ namespace compiler::transforms {
                 return ir::instruction(ir::unary(unary.op, new_operand.value(), unary.result));
             }
 
-            return {};
+            return std::nullopt;
         }
 
         std::optional<ir::instruction> propagate(const ir::return_ &ret) {
@@ -163,12 +163,12 @@ namespace compiler::transforms {
                 return ir::instruction{ir::return_{new_value.value()}};
             }
 
-            return {};
+            return std::nullopt;
         }
 
         template<typename T>
         std::optional<ir::instruction> propagate(const T&) {
-            return {};
+            return std::nullopt;
         }
     };
 }
