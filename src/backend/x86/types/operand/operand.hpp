@@ -5,9 +5,8 @@
 #include "imm.hpp"
 #include "label.hpp"
 #include "operand/mem.hpp"
+
 namespace compiler::x86 {
-
-
     class Operand {
     private:
         using variant_t = std::variant<std::monostate, PseudoRegister, Register, Imm, LabelOperand, Mem>;

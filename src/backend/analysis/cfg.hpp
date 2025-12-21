@@ -9,6 +9,9 @@
 #include "traits/traits.hpp"
 
 namespace compiler {
+    static constexpr size_t START_NODE = 0;
+    static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
+
     template<typename InstrType>
     class CFG {
     public:
@@ -17,9 +20,6 @@ namespace compiler {
         using func_t = Function<InstrType>;
         using node_t = Node<InstrType>;
 
-        static constexpr size_t START_NODE = 0;
-        static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
-        static constexpr size_t INVALID_NODE = std::numeric_limits<size_t>::max();
 
     private:
         //TODO should probably do something better

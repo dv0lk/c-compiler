@@ -54,6 +54,8 @@ add_executable(compiler-rewrite src/main.cpp
         src/backend/analysis/traits/ir.hpp
         src/backend/analysis/traits/x86.hpp
         src/backend/analysis/liveness.hpp
+        src/backend/x86/reg_alloc.hpp
+        src/backend/x86/types/types.hpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src

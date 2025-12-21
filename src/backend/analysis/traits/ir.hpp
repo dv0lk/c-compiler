@@ -50,5 +50,52 @@ namespace compiler {
             }
             throw std::runtime_error("Error");
         }
+
+
+        // Liveness analysis - get variables defined by an instruction
+        static std::vector<std::string> get_defs(const ir::instruction& instr) {
+            return instr.visit([](const auto& i) -> std::vector<std::string> {
+                using T = std::decay_t<decltype(i)>;
+                if constexpr (std::is_same_v<T, ir::binary>) {
+                    return {i.result.get_variable()};
+                } else if constexpr (std::is_same_v<T, ir::unary>) {
+                    return {i.result.get_variable()};
+                } else if constexpr (std::is_same_v<T, ir::copy>) {
+                    return {i.destination.get_variable()};
+                } else if constexpr (std::is_same_v<T, ir::func_call>) {
+                    return {i.destination.get_variable()};
+                } else {
+                    return {};
+                }
+            });
+        }
+
+        // Liveness analysis - get variables used by an instruction
+        static std::vector<std::string> get_uses(const ir::instruction& instr) {
+            return instr.visit([](const auto& i) -> std::vector<std::string> {
+                using T = std::decay_t<decltype(i)>;
+                std::vector<std::string> result;
+
+                if constexpr (std::is_same_v<T, ir::binary>) {
+                    if (i.left.is_variable()) result.push_back(i.left.get_variable());
+                    if (i.right.is_variable()) result.push_back(i.right.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::unary>) {
+                    if (i.value.is_variable()) result.push_back(i.value.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::copy>) {
+                    if (i.source.is_variable()) result.push_back(i.source.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::jump_if_zero>) {
+                    if (i.condition.is_variable()) result.push_back(i.condition.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::jump_if_not_zero>) {
+                    if (i.condition.is_variable()) result.push_back(i.condition.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::return_>) {
+                    if (i.value.is_variable()) result.push_back(i.value.get_variable());
+                } else if constexpr (std::is_same_v<T, ir::func_call>) {
+                    for (const auto& arg : i.arguments) {
+                        if (arg.is_variable()) result.push_back(arg.get_variable());
+                    }
+                }
+                return result;
+            });
+        }
     };
 }

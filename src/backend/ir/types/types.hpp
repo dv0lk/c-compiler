@@ -16,6 +16,7 @@ namespace compiler::ir {
         VirtualReg result;
 
         bool operator==(const binary &) const = default;
+
     };
 
     struct unary {
