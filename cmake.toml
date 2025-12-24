@@ -1,0 +1,12 @@
+# Reference: https://build-cpp.github.io/cmkr/cmake-toml
+[cmake]
+version = "4.1"
+cmkr-include = "cmake/cmkr.cmake"
+
+[project]
+name = "compiler"
+languages = ["CXX"]
+
+[subdir.vendor]
+[subdir.src]
+
