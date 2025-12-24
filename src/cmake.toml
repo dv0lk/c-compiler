@@ -1,0 +1,14 @@
+[target.compiler-lib]
+alias = "compiler::lib"
+type = "interface"
+compile-features = ["cxx_std_23"]
+include-directories = ["compiler/", "compiler/backend", "compiler/frontend"]
+sources = ["compiler/**.cpp", "compiler/**.hpp"]
+link-libraries = ["argparse"]
+
+[target.compiler]
+type = "executable"
+compile-features = ["cxx_std_23"]
+sources = ["entry.cpp"]
+include-directories = ["compiler/"]
+link-libraries = ["compiler::lib"]
