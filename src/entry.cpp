@@ -1,15 +1,11 @@
 #include "compiler/frontend/lexer/lexer.hpp"
 #include "compiler/frontend/parser.hpp"
 #include "backend/ir/emitter.hpp"
-#include "util/printer.hpp"
-#include "util/files.hpp"
-#include <filesystem>
 #include <print>
 #include "backend/transforms/manager.hpp"
 #include "backend/transforms/transforms/constant_fold.hpp" //TODO should either create a single header for all transforms, or do somethign different
 #include "backend/transforms/transforms/copy_propagation.hpp"
 #include "backend/x86/codegen.hpp"
-#include "util/x86_printer.hpp"
 #include "backend/analysis/cfg.hpp"
 #include "config/config.hpp"
 #include "util/format/format.hpp"

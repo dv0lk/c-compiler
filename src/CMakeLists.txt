@@ -51,7 +51,6 @@ set(compiler-lib_SOURCES
 	"compiler/util/format/format.hpp"
 	"compiler/util/format/ir/format.hpp"
 	"compiler/util/format/x86/format.hpp"
-		"compiler/util/util/util.hpp"
 )
 
 add_library(compiler-lib INTERFACE)
