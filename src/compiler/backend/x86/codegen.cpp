@@ -54,7 +54,7 @@ void compiler::x86::emitter::assemble(const ir::Binary &binary) {
     auto right = convert_virt_reg(binary.right);
 
     switch (binary.op) {
-            using enum token_t;
+            using enum TokenType;
         case Plus:
             current_bb_.emplace_back(Mov(result, left));
             current_bb_.emplace_back(Add(result, right));
@@ -112,7 +112,7 @@ void compiler::x86::emitter::assemble(const ir::Unary &unary) {
     auto value = convert_virt_reg(unary.value);
 
     switch (unary.op) {
-            using enum token_t;
+            using enum TokenType;
         case Minus:
             current_bb_.emplace_back(Neg(result));
             break;

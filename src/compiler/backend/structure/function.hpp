@@ -25,7 +25,8 @@ namespace compiler {
 
         [[nodiscard]] const std::string &name() const { return name_; }
 
-        [[nodiscard]] std::vector<std::string> params() const { return params_; }
+        [[nodiscard]] std::vector<std::string>& params() { return params_; }
+        [[nodiscard]] const std::vector<std::string>& params() const { return params_; }
 
         [[nodiscard]] std::vector<block_t> &basic_blocks() { return basic_blocks_; }
         [[nodiscard]] const std::vector<block_t> &basic_blocks() const { return basic_blocks_; }

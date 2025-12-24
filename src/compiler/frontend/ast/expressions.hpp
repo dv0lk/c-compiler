@@ -20,18 +20,18 @@ namespace compiler::ast::expr {
 
     struct binary {
         expr_ptr left;
-        token_t op;
+        TokenType op;
         expr_ptr right;
     };
 
     struct unary {
-        token_t op;
+        TokenType op;
         expr_ptr value;
     };
 
     struct logical {
         expr_ptr left;
-        token_t op;
+        TokenType op;
         expr_ptr right;
     };
 

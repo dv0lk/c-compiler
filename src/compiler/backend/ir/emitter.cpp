@@ -218,7 +218,7 @@ namespace compiler::ir {
         auto left = emit_expr(expr.left);
         auto result= Operand(make_tmp_var());
 
-        if (expr.op == token_t::LogicalAnd) {
+        if (expr.op == TokenType::LogicalAnd) {
             current_bb_.emplace_back(JumpIfZero{left, short_circuit_label});
 
             auto right = emit_expr(expr.right);
@@ -229,7 +229,7 @@ namespace compiler::ir {
             current_bb_.emplace_back(Copy{result, 0});
 
             start_new_bb(end_label);
-        } else if (expr.op == token_t::LogicalOr) {
+        } else if (expr.op == TokenType::LogicalOr) {
             current_bb_.emplace_back(JumpIfNotZero{left, short_circuit_label});
 
             auto right = emit_expr(expr.right);

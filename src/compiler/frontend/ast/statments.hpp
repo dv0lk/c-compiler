@@ -37,11 +37,11 @@ namespace compiler::ast::stmt {
 
     struct function_param {
         std::string name;
-        token_t type;
+        TokenType type;
     };
 
     struct function_decl {
-        token_t return_type;
+        TokenType return_type;
         std::string function_name;
         std::vector<function_param> params;
         stmt_ptr body;

@@ -20,7 +20,7 @@ namespace compiler::ast {
 
         [[nodiscard]] bool is_end() const;
 
-        bool check_and_advance(const token_t type) {
+        bool check_and_advance(const TokenType type) {
             if (peek().get_type() == type) {
                 advance();
                 return true;
@@ -41,9 +41,9 @@ namespace compiler::ast {
 
         [[nodiscard]] Token previous() const;
 
-        [[nodiscard]] bool check(token_t type) const;
+        [[nodiscard]] bool check(TokenType type) const;
 
-        Token consume(token_t type, const std::string &error_message);
+        Token consume(TokenType type, const std::string &error_message);
 
         expr::expr_ptr parse_expression();
 

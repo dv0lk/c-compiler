@@ -11,7 +11,7 @@ namespace compiler::ir {
     };
 
     struct Binary {
-        token_t op;
+        TokenType op;
         Operand left;
         Operand right;
         Operand result;
@@ -21,7 +21,7 @@ namespace compiler::ir {
     };
 
     struct Unary {
-        token_t op;
+        TokenType op;
         Operand value;
         Operand result;
 

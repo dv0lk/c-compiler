@@ -17,8 +17,8 @@ namespace compiler {
 
         [[nodiscard]] bool empty() const { return functions_.empty(); }
 
-        [[nodiscard]] std::vector<function_t> functions() { return functions_; }
-        [[nodiscard]] std::vector<function_t> functions() const { return functions_; }
+        [[nodiscard]] std::vector<function_t>& functions() { return functions_; }
+        [[nodiscard]] const std::vector<function_t>& functions() const { return functions_; }
 
         [[nodiscard]] auto begin() { return functions_.begin(); }
         [[nodiscard]] auto end() { return functions_.end(); }

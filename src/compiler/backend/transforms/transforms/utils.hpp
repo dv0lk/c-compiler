@@ -4,42 +4,42 @@
 #include "../../../frontend/lexer/token.hpp"
 
 namespace compiler::transforms::utils {
-    static int evaluate_binary(const token_t op, const int left, const int right) {
+    static int evaluate_binary(const TokenType op, const int left, const int right) {
         switch (op) {
             default:
                 throw std::runtime_error("Unknown binary operation for constant folding");
-            case token_t::Plus:
+            case TokenType::Plus:
                 return left + right;
-            case token_t::Minus:
+            case TokenType::Minus:
                 return left - right;
-            case token_t::Star:
+            case TokenType::Star:
                 return left * right;
-            case token_t::Slash:
+            case TokenType::Slash:
                 return left / right;
-            case token_t::NotEqual:
+            case TokenType::NotEqual:
                 return left != right ? 1 : 0;
-            case token_t::EqualEqual:
+            case TokenType::EqualEqual:
                 return left == right ? 1 : 0;
-            case token_t::Less:
+            case TokenType::Less:
                 return left < right ? 1 : 0;
-            case token_t::LessEqual:
+            case TokenType::LessEqual:
                 return left <= right ? 1 : 0;
-            case token_t::Greater:
+            case TokenType::Greater:
                 return left > right ? 1 : 0;
-            case token_t::GreaterEqual:
+            case TokenType::GreaterEqual:
                 return left >= right ? 1 : 0;
         }
     }
 
-    static int evaluate_unary(const int value, const token_t op) {
+    static int evaluate_unary(const int value, const TokenType op) {
         switch (op) {
             default:
                 throw std::runtime_error("Unknown unary operation for constant folding");
-            case token_t::Minus:
+            case TokenType::Minus:
                 return -value;
-            case token_t::Tilde:
+            case TokenType::Tilde:
                 return ~value;
-            case token_t::Not:
+            case TokenType::Not:
                 return !value ? 1 : 0;
         }
     }

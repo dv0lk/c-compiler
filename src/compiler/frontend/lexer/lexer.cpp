@@ -33,31 +33,31 @@ namespace compiler::lexer {
 
         switch (c) {
         case '(':
-            add_token(token_t::LeftParen);
+            add_token(TokenType::LeftParen);
             break;
         case ')':
-            add_token(token_t::RightParen);
+            add_token(TokenType::RightParen);
             break;
         case '{':
-            add_token(token_t::LeftBrace);
+            add_token(TokenType::LeftBrace);
             break;
         case '}':
-            add_token(token_t::RightBrace);
+            add_token(TokenType::RightBrace);
             break;
         case ',':
-            add_token(token_t::Comma);
+            add_token(TokenType::Comma);
             break;
         case '.':
-            add_token(token_t::Dot);
+            add_token(TokenType::Dot);
             break;
         case '?':
-            add_token(token_t::QuestionMark);
+            add_token(TokenType::QuestionMark);
             break;
         case ';':
-            add_token(token_t::Semicolon);
+            add_token(TokenType::Semicolon);
             break;
         case '*':
-            add_token(token_t::Star);
+            add_token(TokenType::Star);
             break;
         case '/':
             if (match_next('/')) {
@@ -65,35 +65,35 @@ namespace compiler::lexer {
             } else if (match_next('*')) {
                 skip_multiline_comment();
             } else {
-                add_token(token_t::Slash);
+                add_token(TokenType::Slash);
             }
             break;
         case '!':
-            add_token(match_next('=') ? token_t::NotEqual : token_t::Not);
+            add_token(match_next('=') ? TokenType::NotEqual : TokenType::Not);
             break;
         case '=':
-            add_token(match_next('=') ? token_t::EqualEqual : token_t::Equal);
+            add_token(match_next('=') ? TokenType::EqualEqual : TokenType::Equal);
             break;
         case '<':
-            add_token(match_next('=') ? token_t::LessEqual : token_t::Less);
+            add_token(match_next('=') ? TokenType::LessEqual : TokenType::Less);
             break;
         case '>':
-            add_token(match_next('=') ? token_t::GreaterEqual : token_t::Greater);
+            add_token(match_next('=') ? TokenType::GreaterEqual : TokenType::Greater);
             break;
         case '+':
-            add_token(match_next('+') ? token_t::PlusPlus : token_t::Plus);
+            add_token(match_next('+') ? TokenType::PlusPlus : TokenType::Plus);
             break;
         case '-':
-            add_token(match_next('-') ? token_t::MinusMinus : token_t::Minus);
+            add_token(match_next('-') ? TokenType::MinusMinus : TokenType::Minus);
             break;
         case '&':
-            add_token(match_next('&') ? token_t::LogicalAnd : token_t::Ampersand);
+            add_token(match_next('&') ? TokenType::LogicalAnd : TokenType::Ampersand);
             break;
         case '|':
-            add_token(match_next('|') ? token_t::LogicalOr : token_t::Pipe);
+            add_token(match_next('|') ? TokenType::LogicalOr : TokenType::Pipe);
             break;
         case '~':
-            add_token(token_t::Tilde);
+            add_token(TokenType::Tilde);
             break;
         case '"':
             consume_string();
@@ -149,7 +149,7 @@ namespace compiler::lexer {
         return source.substr(start_position, current_position - start_position);
     }
 
-    void tokenizer::add_token(token_t type, std::optional<int> literal) {
+    void tokenizer::add_token(TokenType type, std::optional<int> literal) {
         tokens.emplace_back(type, get_lexeme(), literal);
     }
 
@@ -171,7 +171,7 @@ namespace compiler::lexer {
         //todo huh, something is off here, works for now
         const std::string lexeme = source.substr(start_position, current_position - start_position);
 
-        add_token(token_t::StringLiteral);
+        add_token(TokenType::StringLiteral);
     }
 
     //todo handle double/float values
@@ -201,7 +201,7 @@ namespace compiler::lexer {
         }
 
         int value = std::stoi(string_value);
-        add_token(token_t::IntLiteral, value);
+        add_token(TokenType::IntLiteral, value);
     }
 
     void tokenizer::consume_identifier() {
@@ -240,39 +240,39 @@ namespace compiler::lexer {
         }
     }
 
-    token_t tokenizer::keyword_or_identifier(const std::string& str) {
-        static const std::unordered_map<std::string_view, token_t> keywords = {
-            {"break", token_t::Break},
-            {"continue", token_t::Continue},
-            {"do", token_t::Do},
-            {"else", token_t::Else},
-            {"false", token_t::False},
-            {"for", token_t::For},
-            {"if", token_t::If},
-            {"return", token_t::Return},
-            {"true", token_t::True},
-            {"while", token_t::While},
-            {"continue", token_t::Continue},
-            {"else", token_t::Else},
-            {"false", token_t::False},
-            {"for", token_t::For},
-            {"if", token_t::If},
-            {"return", token_t::Return},
-            {"true", token_t::True},
-            {"while", token_t::While},
-            {"int", token_t::Int},
-            {"void", token_t::Void},
-            {"float", token_t::Float},
-            {"char", token_t::Char},
-            {"bool", token_t::Bool},
-            {"goto", token_t::Goto},
-            {"struct", token_t::Struct},
+    TokenType tokenizer::keyword_or_identifier(const std::string& str) {
+        static const std::unordered_map<std::string_view, TokenType> keywords = {
+            {"break", TokenType::Break},
+            {"continue", TokenType::Continue},
+            {"do", TokenType::Do},
+            {"else", TokenType::Else},
+            {"false", TokenType::False},
+            {"for", TokenType::For},
+            {"if", TokenType::If},
+            {"return", TokenType::Return},
+            {"true", TokenType::True},
+            {"while", TokenType::While},
+            {"continue", TokenType::Continue},
+            {"else", TokenType::Else},
+            {"false", TokenType::False},
+            {"for", TokenType::For},
+            {"if", TokenType::If},
+            {"return", TokenType::Return},
+            {"true", TokenType::True},
+            {"while", TokenType::While},
+            {"int", TokenType::Int},
+            {"void", TokenType::Void},
+            {"float", TokenType::Float},
+            {"char", TokenType::Char},
+            {"bool", TokenType::Bool},
+            {"goto", TokenType::Goto},
+            {"struct", TokenType::Struct},
         };
 
         if (keywords.contains(str)) {
             return keywords.at(str);
         }
 
-        return token_t::Identifier;
+        return TokenType::Identifier;
     }
 }

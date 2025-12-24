@@ -37,7 +37,7 @@ namespace compiler::lexer {
 
         void advance();
 
-        void add_token(token_t type, std::optional<int> literal = {});
+        void add_token(TokenType type, std::optional<int> literal = {});
 
         void consume_string();
 
@@ -51,7 +51,7 @@ namespace compiler::lexer {
 
         [[nodiscard]] std::string get_lexeme() const;
 
-        [[nodiscard]] static token_t keyword_or_identifier(const std::string& str);
+        [[nodiscard]] static TokenType keyword_or_identifier(const std::string& str);
     };
 }
 

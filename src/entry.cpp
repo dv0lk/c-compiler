@@ -11,17 +11,27 @@
 #include "backend/x86/codegen.hpp"
 #include "util/x86_printer.hpp"
 #include "backend/analysis/cfg.hpp"
+#include "config/config.hpp"
+#include "util/format/format.hpp"
 
 namespace compiler {
-    void startup(const std::string& source) {
-        auto tokens = lexer::tokenizer::get_tokens(source);
+    void startup(const Config& config) {
+        auto tokens = lexer::tokenizer::get_tokens(config.input_file);
         auto ast = ast::Parser::get_ast(tokens);
         auto ir = ir::Emitter::get_ir(ast);
-        std::println("A");
-        // auto x86 = x86::emitter::get_x86(ir);
+
+        if (config.print_ir_no_opt) {
+            std::println("{}", ir);
+        }
+
+        auto x86 = x86::emitter::get_x86(ir);
+
+        if (config.print_x86_no_opt) {
+            std::println("{}", x86);
+        }
+
+
         // auto cfg = CFG<x86::Instruction>::from_function(x86.functions().front());
-
-
         // auto cfg = CFG<x86::Instruction>::from_function(x86_instructions);
         // CFG<> cfg = CFG::get_cfg(ir.functions().front().blocks());
         // x86::util::print_instructions(x86_instructions);
@@ -38,15 +48,20 @@ namespace compiler {
 }
 
 
-int main() {
-    const auto project_path = std::filesystem::current_path().parent_path();
-    // const std::string path = (project_path / "tests" / "test.c").string();
-    const std::string path = "C:/Users/123/CLionProjects/compiler-rewrite/tests/test.c";
-    const auto file = files::read_file(path);
-    if (!file.has_value())
-        throw std::runtime_error("Failed to read file");
+int main(int argc, char* argv[]) {
+    Config config;
+    config.init(argc, argv);
+    compiler::startup(config);
 
-    const std::string source = {file->begin(), file->end()};
 
-    compiler::startup(source);
+    // return 0;
+    // const auto project_path = std::filesystem::current_path().parent_path();
+    // // const std::string path = (project_path / "tests" / "test.c").string();
+    // const std::string path = "C:/Users/123/CLionProjects/compiler-rewrite/tests/test.c";
+    // const auto file = files::read_file(path);
+    // if (!file.has_value())
+    //     throw std::runtime_error("Failed to read file");
+    //
+    // const std::string source = {file->begin(), file->end()};
+
 }

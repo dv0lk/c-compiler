@@ -10,5 +10,5 @@ link-libraries = ["argparse"]
 type = "executable"
 compile-features = ["cxx_std_23"]
 sources = ["entry.cpp"]
-include-directories = ["compiler/"]
+include-directories = ["compiler/", "config/"]
 link-libraries = ["compiler::lib"]

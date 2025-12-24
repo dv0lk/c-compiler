@@ -48,6 +48,9 @@ set(compiler-lib_SOURCES
 	"compiler/frontend/parser.cpp"
 	"compiler/frontend/parser.hpp"
 	"compiler/util/files.hpp"
+	"compiler/util/format/format.hpp"
+	"compiler/util/format/ir/format.hpp"
+	"compiler/util/format/x86/format.hpp"
 	"compiler/util/printer.hpp"
 	"compiler/util/util/util.hpp"
 	"compiler/util/x86_printer.hpp"
@@ -90,6 +93,7 @@ target_compile_features(compiler PRIVATE
 
 target_include_directories(compiler PRIVATE
 	"compiler/"
+	"config/"
 )
 
 target_link_libraries(compiler PRIVATE
