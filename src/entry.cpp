@@ -17,10 +17,6 @@ namespace compiler {
         auto ast = ast::Parser::get_ast(tokens);
         auto ir = ir::Emitter::get_ir(ast);
 
-        // if (config.print_ir_no_opt) {
-        //     std::println("{}", ir);
-        // }
-
         TransformManager<ir::Instruction> tm;
         tm.register_transform<transforms::ConstantFolding<ir::Instruction>>();
         tm.register_transform<transforms::CopyPropagation<ir::Instruction>>();
@@ -29,20 +25,17 @@ namespace compiler {
 
 
         auto x86 = x86::emitter::get_x86(ir);
+        std::println("{}", x86);
+
         x86::RegisterAllocator allocator;
         allocator.run_on_program(x86);
-        // std::println("{}", x86);
-
-
-
+        std::println("{}", x86);
         // auto cfg = CFG<x86::Instruction>::from_function(x86.functions().front());
-
         // auto cfg = CFG<x86::Instruction>::from_function(x86_instructions);
         // CFG<> cfg = CFG::get_cfg(ir.functions().front().blocks());
         // x86::util::print_instructions(x86_instructions);
         // std::println("");
         // std::println("{}", ir::printer::to_string(ir));
-        //
         // TransformManager<ir::instruction> tm;
         // tm.register_transform<transforms::ConstantFolding<ir::instruction>>();
         // tm.register_transform<transforms::CopyPropagation<ir::instruction>>();

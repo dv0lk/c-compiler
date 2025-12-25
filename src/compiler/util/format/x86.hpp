@@ -323,8 +323,8 @@ struct std::formatter<compiler::Function<compiler::x86::Instruction>> {
         }
         out = std::format_to(out, "):\n");
 
-        for (const auto& block : fn.basic_blocks()) {
-            out = std::format_to(out, "{}", block);
+        for (const auto& instr : fn.instructions()) {
+            out = std::format_to(out, "    {}\n", instr);
         }
         return out;
     }

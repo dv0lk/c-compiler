@@ -1,14 +1,12 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "basic_block.hpp"
+#include <span>
 
 namespace compiler {
     template<typename InstrType>
     class Function {
     public:
-        using block_t = BasicBlock<InstrType>;
-
         Function() = default;
 
         explicit Function(std::string function_name)
@@ -19,23 +17,39 @@ namespace compiler {
             params_.emplace_back(std::move(param_name));
         }
 
-        void add_bb(block_t block) {
-            basic_blocks_.emplace_back(std::move(block));
+        void push_back(const InstrType& instr) {
+            instructions_.push_back(instr);
         }
 
-        [[nodiscard]] const std::string &name() const { return name_; }
+        void push_back(InstrType&& instr) {
+            instructions_.push_back(std::move(instr));
+        }
+
+        template<typename... Args>
+        void emplace_back(Args&&... args) {
+            instructions_.emplace_back(std::forward<Args>(args)...);
+        }
+
+        [[nodiscard]] const std::string& name() const { return name_; }
 
         [[nodiscard]] std::vector<std::string>& params() { return params_; }
         [[nodiscard]] const std::vector<std::string>& params() const { return params_; }
 
-        [[nodiscard]] std::vector<block_t> &basic_blocks() { return basic_blocks_; }
-        [[nodiscard]] const std::vector<block_t> &basic_blocks() const { return basic_blocks_; }
+        [[nodiscard]] std::vector<InstrType>& instructions() { return instructions_; }
+        [[nodiscard]] const std::vector<InstrType>& instructions() const { return instructions_; }
+        [[nodiscard]] std::span<const InstrType> instructions_span() const { return instructions_; }
 
-        [[nodiscard]] bool empty() const { return basic_blocks_.empty(); }
+        [[nodiscard]] bool empty() const { return instructions_.empty(); }
+        [[nodiscard]] size_t size() const { return instructions_.size(); }
+
+        auto begin() { return instructions_.begin(); }
+        auto end() { return instructions_.end(); }
+        auto begin() const { return instructions_.begin(); }
+        auto end() const { return instructions_.end(); }
 
     private:
         std::string name_;
-        std::vector<block_t> basic_blocks_;
-        std::vector<std::string> params_; //TODO make actual param type?
+        std::vector<InstrType> instructions_;
+        std::vector<std::string> params_;
     };
 }

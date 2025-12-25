@@ -2,7 +2,7 @@
 #include <memory>
 #include <unordered_set>
 
-#include "structure/program.hpp"
+#include "structure/basic_block.hpp"
 
 namespace compiler {
     template<typename InstrType>

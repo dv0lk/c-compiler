@@ -14,14 +14,13 @@ namespace compiler {
 
         template<typename PassType>
         void register_transform() {
-            auto instance = std::make_unique<PassType>();
-            passes_.emplace_back(std::move(instance));
+            local_passes_.emplace_back(std::make_unique<PassType>());
         }
 
         bool run_on_function(Function<InstrType> &function) {
             bool changed = false;
-            for (auto &pass: passes_) {
-                changed |= pass->run(function.basic_blocks());
+            for (auto &pass: local_passes_) {
+                changed |= pass->run(function.instructions());
             }
             return changed;
         }
@@ -35,8 +34,7 @@ namespace compiler {
         }
 
     private:
-        using bb_t = std::vector<BasicBlock<InstrType> >;
-        using transform_ptr = std::shared_ptr<Transform<bb_t> >;
-        std::vector<transform_ptr> passes_;
+        using local_transform_ptr = std::unique_ptr<Transform<InstrType>>;
+        std::vector<local_transform_ptr> local_passes_;
     };
 }

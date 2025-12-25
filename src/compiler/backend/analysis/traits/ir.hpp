@@ -70,7 +70,6 @@ namespace compiler {
             });
         }
 
-        // Liveness analysis - get variables used by an instruction
         static std::vector<std::string> get_uses(const ir::Instruction& instr) {
             return instr.visit([](const auto& i) -> std::vector<std::string> {
                 using T = std::decay_t<decltype(i)>;
@@ -96,6 +95,10 @@ namespace compiler {
                 }
                 return result;
             });
+        }
+
+        static bool has_side_effects(const ir::Instruction& instr) {
+            return instr.holds<ir::FunctionCall>();
         }
     };
 }

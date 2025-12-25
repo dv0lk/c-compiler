@@ -3,31 +3,27 @@
 
 #include "transforms/transform.hpp"
 #include "ir/ir.hpp"
+#include "analysis/traits/traits.hpp"
 
 namespace compiler::transforms {
     template<typename InstrType>
-    class CopyPropagation : public Transform<std::vector<BasicBlock<ir::Instruction>> > {
+    class CopyPropagation : public Transform<InstrType> {
     public:
         CopyPropagation() = default;
 
         ~CopyPropagation() override = default;
 
-        bool run(std::vector<BasicBlock<ir::Instruction>> &blocks) override {
+        bool run(std::vector<InstrType> &instructions) override {
+            copy_map_.clear();
             bool changed = false;
-            for (auto &block : blocks) {
-                copy_map_.clear();
-                changed |= process_block(block);
-            }
-            return changed;
-        }
 
-    private:
-        // dest -> src
-        std::unordered_map<std::string, std::string> copy_map_;
+            for (auto &instr : instructions) {
+                // Reset map at labels (conservative for control flow)
+                if (InstructionTrait<InstrType>::is_label(instr)) {
+                    copy_map_.clear();
+                    continue;
+                }
 
-        bool process_block(BasicBlock<ir::Instruction> &block) {
-            bool changed = false;
-            for (auto &instr : block.instructions()) {
                 auto new_instr = instr.visit([this](auto &i) { return propagate(i); });
                 if (new_instr.has_value()) {
                     instr = std::move(new_instr.value());
@@ -36,8 +32,13 @@ namespace compiler::transforms {
 
                 update_copy_map(instr);
             }
+
             return changed;
         }
+
+    private:
+        // dest -> src
+        std::unordered_map<std::string, std::string> copy_map_;
 
         void invalidate_variable(const std::string &var) {
             copy_map_.erase(var);

@@ -12,7 +12,6 @@ namespace compiler::ir {
     public:
         using program_t = Program<Instruction>;
         using function_t = Function<Instruction>;
-        using bb_t = BasicBlock<Instruction>;
 
         Program<Instruction> emit(const std::vector<ast::stmt::stmt_ptr> &ast);
 
@@ -24,23 +23,15 @@ namespace compiler::ir {
     private:
         program_t program_;
         function_t current_function_;
-        bb_t current_bb_;
 
         Resolver resolver_;
 
         int var_counter_ = 0;
         int label_counter_ = 0;
 
-
         void finalize_current_function();
 
         void start_new_function(const std::string &function_name);
-
-        //push current block to blocks
-        void finalize_current_block();
-
-        //finalize current block and start new block with provided label
-        void start_new_bb(const std::string &label);
 
         std::string make_tmp_var();
 

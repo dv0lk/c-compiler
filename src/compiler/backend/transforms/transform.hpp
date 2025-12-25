@@ -1,12 +1,17 @@
 #pragma once
 
-template<typename InstrType>
-class Transform {
-public:
-    Transform() = default;
+#include <vector>
 
-    virtual ~Transform() = default;
+namespace compiler {
+    template<typename InstrType>
+    class CFG;
 
-    [[nodiscard]] virtual bool run(InstrType& instructions) = 0;
-};
+    template<typename InstrType>
+    class Transform {
+    public:
+        Transform() = default;
+        virtual ~Transform() = default;
 
+        [[nodiscard]] virtual bool run(std::vector<InstrType>& instructions) = 0;
+    };
+}

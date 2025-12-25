@@ -21,17 +21,20 @@ namespace compiler::x86 {
     public:
         using traits = InstructionTrait<Instruction>;
 
-        static InterferenceGraph get_graph(const Function<Instruction> &function,
+        static InterferenceGraph get_graph(const CFG<Instruction> &cfg,
                                            const LivenessAnalysis<Instruction> &liveness) {
             InterferenceGraph graph;
 
-            int block_index = 0;
-            int instr_index = 0;
-            for (const auto &block: function.basic_blocks()) {
-                instr_index = 0;
-                for (const auto &instr: block.instructions()) {
+            for (size_t block_id : cfg.get_block_ids()) {
+                if (block_id == START_NODE || block_id == EXIT_NODE) continue;
+
+                auto* node = cfg.find_node(block_id);
+                if (!node || node->empty()) continue;
+
+                size_t instr_index = 0;
+                for (const auto &instr: node->block->instructions()) {
                     //get all live variables at this instruction
-                    auto live_out = liveness.get_instr_live_out(block_index, instr_index);
+                    auto live_out = liveness.get_instr_live_out(block_id, instr_index);
                     //when variable is defined, connect it to all nodes that are currently live
                     for (const auto &def: traits::get_defs(instr)) {
                         graph.add_node(def);
@@ -47,7 +50,6 @@ namespace compiler::x86 {
 
                     ++instr_index;
                 }
-                ++block_index;
             }
             return graph;
         }
@@ -127,8 +129,9 @@ namespace compiler::x86 {
         void run_on_function(Function<Instruction> &function) {
             reset();
 
-            auto liveness = LivenessAnalysis<Instruction>::get_analysis(function);
-            auto graph = InterferenceGraph::get_graph(function, liveness);
+            auto cfg = CFG<Instruction>::from_function(function);
+            auto liveness = LivenessAnalysis<Instruction>::get_analysis(cfg);
+            auto graph = InterferenceGraph::get_graph(cfg, liveness);
 
             color_graph(graph);
 
@@ -150,7 +153,6 @@ namespace compiler::x86 {
             auto saved_graph = graph;
 
             std::stack<std::string> stack;
-            std::unordered_set<std::string> spill_candidates;
 
             //simplify phase
             while (!graph.empty()) {
@@ -247,48 +249,47 @@ namespace compiler::x86 {
         }
 
         void rewrite_function(Function<Instruction> &function) {
-            for (auto &block: function.basic_blocks()) {
-                for (auto &instr: block.instructions()) {
-                    rewrite_instruction(instr);
-                }
+            for (auto &instr: function.instructions()) {
+                rewrite_instruction(instr);
             }
         }
-
-
 
         void add_prologue(Function<Instruction>& function) {
             if (function.empty())
                 return;
 
-            auto& first_block = function.basic_blocks().front();
+            auto& instrs = function.instructions();
+
+            size_t insert_pos = 1;
+
             auto push = Instruction(Push(Register(RegType::RBP)));
             auto mov = Instruction(Mov(Register(RegType::RBP), Register(RegType::RSP)));
             auto sub = Instruction(Sub(Register(RegType::RSP), Imm(curr_stack_offset_)));
 
-            if (curr_stack_offset_ + 8 < 0) first_block.push_front(sub);
-            first_block.push_front(mov);
-            first_block.push_front(push);
+            if (curr_stack_offset_ + 8 < 0) {
+                instrs.insert(instrs.begin() + insert_pos, sub);
+            }
+            instrs.insert(instrs.begin() + insert_pos, mov);
+            instrs.insert(instrs.begin() + insert_pos, push);
         }
 
         void add_epilogue(Function<Instruction>& function) {
-            for (auto& block : function.basic_blocks()) {
-                auto& instrs = block.instructions();
+            auto& instrs = function.instructions();
 
-                std::vector<Instruction> new_instrs;
-                new_instrs.reserve(instrs.size() * 2);
+            std::vector<Instruction> new_instrs;
+            new_instrs.reserve(instrs.size() * 2);
 
-                for (auto& instr : instrs) {
-                    if (instr.holds<Ret>()) {
-                        if (curr_stack_offset_ + 8 < 0) {
-                            new_instrs.emplace_back(Mov(Register(RegType::RSP), Register(RegType::RBP)));
-                        }
-                        new_instrs.emplace_back(Pop(Register(RegType::RBP)));
+            for (auto& instr : instrs) {
+                if (instr.holds<Ret>()) {
+                    if (curr_stack_offset_ + 8 < 0) {
+                        new_instrs.emplace_back(Mov(Register(RegType::RSP), Register(RegType::RBP)));
                     }
-                    new_instrs.push_back(std::move(instr));
+                    new_instrs.emplace_back(Pop(Register(RegType::RBP)));
                 }
-
-                instrs = std::move(new_instrs);
+                new_instrs.push_back(std::move(instr));
             }
+
+            instrs = std::move(new_instrs);
         }
 
 

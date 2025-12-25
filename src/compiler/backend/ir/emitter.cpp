@@ -1,9 +1,5 @@
 #include "emitter.hpp"
 
-
-//TODO maybe the design should something like this:
-// we have a function add_instruction. And then this instruction decides if to start/terminate the block based on the current instruction
-// ????
 namespace compiler::ir {
     Program<Instruction> Emitter::emit(const std::vector<ast::stmt::stmt_ptr> &ast) {
         for (const auto &stmt: ast) {
@@ -14,11 +10,6 @@ namespace compiler::ir {
     }
 
     void Emitter::finalize_current_function() {
-        if (!current_bb_.empty()) {
-            current_function_.add_bb(std::move(current_bb_));
-            current_bb_ = {};
-        }
-
         if (!current_function_.empty()) {
             program_.add_function(std::move(current_function_));
             current_function_ = {};
@@ -28,18 +19,6 @@ namespace compiler::ir {
     void Emitter::start_new_function(const std::string &function_name) {
         finalize_current_function();
         current_function_ = function_t{function_name};
-    }
-
-    void Emitter::finalize_current_block() {
-        if (!current_bb_.empty()) {
-            current_function_.add_bb(std::move(current_bb_));
-        }
-    }
-
-    void Emitter::start_new_bb(const std::string& label) {
-        finalize_current_block();
-        current_bb_ = bb_t{};
-        current_bb_.emplace_back(Label(label));
     }
 
     [[nodiscard]] std::string Emitter::make_tmp_var() {
@@ -62,7 +41,7 @@ namespace compiler::ir {
 
     void Emitter::emit_stmt(const ast::stmt::return_ &ret) {
         const auto ret_value = emit_expr(ret.value);
-        current_bb_.emplace_back(Return{ret_value});
+        current_function_.emplace_back(Return{ret_value});
     }
 
     //TODO uhh is this a bug?
@@ -90,17 +69,17 @@ namespace compiler::ir {
         const std::string else_label = stmt.else_branch.has_value() ? make_label("if_else") : end_label;
 
         auto cond = emit_expr(stmt.condition);
-        current_bb_.emplace_back(JumpIfZero{cond, Label{else_label}});
+        current_function_.emplace_back(JumpIfZero{cond, Label{else_label}});
 
-        start_new_bb(then_label);
+        current_function_.emplace_back(Label{then_label});
 
         emit_stmt(stmt.then_branch);
         if (stmt.else_branch.has_value()) {
-            start_new_bb(else_label);
+            current_function_.emplace_back(Label{else_label});
             emit_stmt(stmt.else_branch.value());
-            current_bb_.emplace_back(Jump{Label{end_label}});
+            current_function_.emplace_back(Jump{Label{end_label}});
         }
-        start_new_bb(end_label);
+        current_function_.emplace_back(Label{end_label});
     }
 
     void Emitter::emit_stmt(const ast::stmt::while_ &stmt) {
@@ -108,18 +87,18 @@ namespace compiler::ir {
         const std::string body_label = make_label("while_body");
         const std::string end_label = make_label("while_end");
 
-        current_bb_.emplace_back(Jump{cond_label});
+        current_function_.emplace_back(Jump{cond_label});
 
-        start_new_bb(cond_label);
+        current_function_.emplace_back(Label{cond_label});
         auto condition = emit_expr(stmt.condition);
-        current_bb_.emplace_back(JumpIfNotZero{condition, end_label});
-        current_bb_.emplace_back(Jump{body_label});
+        current_function_.emplace_back(JumpIfNotZero{condition, end_label});
+        current_function_.emplace_back(Jump{body_label});
 
-        start_new_bb(body_label);
+        current_function_.emplace_back(Label{body_label});
         emit_stmt(stmt.body);
-        current_bb_.emplace_back(Jump{cond_label});
+        current_function_.emplace_back(Jump{cond_label});
 
-        start_new_bb(end_label);
+        current_function_.emplace_back(Label{end_label});
     }
 
     void Emitter::emit_stmt(const ast::stmt::function_param &stmt) {
@@ -149,7 +128,7 @@ namespace compiler::ir {
         if (variable.initializer.has_value()) {
             const auto rhs = emit_expr(variable.initializer.value());
             const auto lhs = Operand{make_variable_name(variable.name, scope_id.value())};
-            current_bb_.emplace_back(Copy{lhs, rhs});
+            current_function_.emplace_back(Copy{lhs, rhs});
             return;
         }
 
@@ -182,7 +161,7 @@ namespace compiler::ir {
         auto right = emit_expr(expr.right);
         auto result= Operand{make_tmp_var()};
 
-        current_bb_.emplace_back(Binary{expr.op, left, right, result});
+        current_function_.emplace_back(Binary{expr.op, left, right, result});
         return result;
     }
 
@@ -190,7 +169,7 @@ namespace compiler::ir {
         auto operand = emit_expr(expr.value);
         auto result = Operand(make_tmp_var());
 
-        current_bb_.emplace_back(Unary{expr.op, operand, result});
+        current_function_.emplace_back(Unary{expr.op, operand, result});
         return result;
     }
 
@@ -207,7 +186,7 @@ namespace compiler::ir {
         }
 
         auto destination= Operand(make_variable_name(expr.name, resolved.value()));
-        current_bb_.emplace_back(Copy{destination, value});
+        current_function_.emplace_back(Copy{destination, value});
         return destination;
     }
 
@@ -219,27 +198,27 @@ namespace compiler::ir {
         auto result= Operand(make_tmp_var());
 
         if (expr.op == TokenType::LogicalAnd) {
-            current_bb_.emplace_back(JumpIfZero{left, short_circuit_label});
+            current_function_.emplace_back(JumpIfZero{left, short_circuit_label});
 
             auto right = emit_expr(expr.right);
-            current_bb_.emplace_back(Copy{result, right});
-            current_bb_.emplace_back(Jump{end_label});
+            current_function_.emplace_back(Copy{result, right});
+            current_function_.emplace_back(Jump{end_label});
 
-            start_new_bb(short_circuit_label);
-            current_bb_.emplace_back(Copy{result, 0});
+            current_function_.emplace_back(Label{short_circuit_label});
+            current_function_.emplace_back(Copy{result, 0});
 
-            start_new_bb(end_label);
+            current_function_.emplace_back(Label{end_label});
         } else if (expr.op == TokenType::LogicalOr) {
-            current_bb_.emplace_back(JumpIfNotZero{left, short_circuit_label});
+            current_function_.emplace_back(JumpIfNotZero{left, short_circuit_label});
 
             auto right = emit_expr(expr.right);
-            current_bb_.emplace_back(Copy{result, right});
-            current_bb_.emplace_back(Jump{end_label});
+            current_function_.emplace_back(Copy{result, right});
+            current_function_.emplace_back(Jump{end_label});
 
-            start_new_bb(short_circuit_label);
-            current_bb_.emplace_back(Copy{result, 1});
+            current_function_.emplace_back(Label{short_circuit_label});
+            current_function_.emplace_back(Copy{result, 1});
 
-            start_new_bb(end_label);
+            current_function_.emplace_back(Label{end_label});
         }
 
         return result;
@@ -252,7 +231,7 @@ namespace compiler::ir {
         }
 
         auto result = Operand(make_tmp_var());
-        current_bb_.emplace_back(FunctionCall{expr.identifier, arguments, result});
+        current_function_.emplace_back(FunctionCall{expr.identifier, arguments, result});
 
         return result;
     }

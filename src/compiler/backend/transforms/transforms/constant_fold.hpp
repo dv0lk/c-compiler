@@ -6,21 +6,19 @@
 
 namespace compiler::transforms {
     template<typename InstrType>
-    class ConstantFolding : public Transform<std::vector<BasicBlock<ir::Instruction> > > {
+    class ConstantFolding : public Transform<InstrType> {
     public:
         ConstantFolding() = default;
 
         ~ConstantFolding() override = default;
 
-        bool run(std::vector<BasicBlock<ir::Instruction> > &blocks) override {
+        bool run(std::vector<InstrType> &instructions) override {
             bool changed = false;
-            for (auto &block: blocks) {
-                for (auto &instr: block.instructions()) {
-                    if (is_foldable(instr)) {
-                        auto folded = instr.visit([](auto &i) { return fold(i); });
-                        instr = std::move(folded);
-                        changed = true;
-                    }
+            for (auto &instr: instructions) {
+                if (is_foldable(instr)) {
+                    auto folded = instr.visit([](auto &i) { return fold(i); });
+                    instr = std::move(folded);
+                    changed = true;
                 }
             }
 

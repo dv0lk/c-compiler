@@ -4,9 +4,12 @@
 #include <ranges>
 #include <stdexcept>
 #include <unordered_set>
+#include <algorithm>
+#include <span>
 
 #include "node.hpp"
 #include "traits/traits.hpp"
+#include "structure/basic_block.hpp"
 
 namespace compiler {
     static constexpr size_t START_NODE = 0;
@@ -26,7 +29,7 @@ namespace compiler {
         std::string name_;
         std::unordered_map<size_t, node_t> nodes_;
         std::unordered_map<std::string, size_t> label_cache_;
-        size_t next_node_id_ = 0;
+        size_t next_node_id_ = 1;  // Start at 1 to avoid conflict with START_NODE (0)
 
     public:
         CFG() = default;
@@ -173,8 +176,53 @@ namespace compiler {
             return cfg;
         }
 
+        static std::vector<bb_t> compute_basic_blocks(std::span<const InstrType> instructions) {
+            if (instructions.empty()) return {};
+
+            std::unordered_set<size_t> leaders;
+            leaders.insert(0);
+
+            for (size_t i = 0; i < instructions.size(); ++i) {
+                const auto& instr = instructions[i];
+
+                if (traits::is_terminator(instr) && i + 1 < instructions.size()) {
+                    leaders.insert(i + 1);
+                }
+
+                if (traits::is_label(instr)) {
+                    leaders.insert(i);
+                }
+            }
+
+            std::vector<bb_t> blocks;
+            std::vector<size_t> sorted_leaders(leaders.begin(), leaders.end());
+            std::sort(sorted_leaders.begin(), sorted_leaders.end());
+
+            for (size_t i = 0; i < sorted_leaders.size(); ++i) {
+                size_t start = sorted_leaders[i];
+                size_t end = (i + 1 < sorted_leaders.size())
+                           ? sorted_leaders[i + 1]
+                           : instructions.size();
+
+                bb_t block;
+                for (size_t j = start; j < end; ++j) {
+                    block.push_back(instructions[j]);
+                }
+                blocks.push_back(std::move(block));
+            }
+
+            return blocks;
+        }
+
+        static CFG from_instructions(std::span<const InstrType> instructions) {
+            CFG cfg;
+            auto blocks = compute_basic_blocks(instructions);
+            cfg.build_nodes(blocks);
+            return cfg;
+        }
+
         static CFG from_function(const func_t &function) {
-            return from_bbs(function.basic_blocks());
+            return from_instructions(function.instructions());
         }
     };
 }
