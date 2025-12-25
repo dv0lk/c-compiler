@@ -19,5 +19,4 @@ namespace compiler::x86 {
         R14,
         R15
     };
-
 }

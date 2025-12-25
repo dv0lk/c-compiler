@@ -35,7 +35,15 @@ namespace compiler {
             return std::views::values(nodes_);
         }
 
+        [[nodiscard]] auto get_nodes() const {
+            return std::views::values(nodes_);
+        }
+
         [[nodiscard]] auto get_block_ids() {
+            return std::views::keys(nodes_);
+        }
+
+        [[nodiscard]] auto get_block_ids() const {
             return std::views::keys(nodes_);
         }
 
@@ -129,6 +137,11 @@ namespace compiler {
         }
 
         [[nodiscard]] node_t* find_node(const std::size_t id) {
+            const auto it = nodes_.find(id);
+            return it != nodes_.end() ? &it->second : nullptr;
+        }
+
+        [[nodiscard]] const node_t* find_node(const std::size_t id) const {
             const auto it = nodes_.find(id);
             return it != nodes_.end() ? &it->second : nullptr;
         }

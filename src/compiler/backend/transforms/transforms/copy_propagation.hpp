@@ -13,15 +13,10 @@ namespace compiler::transforms {
         ~CopyPropagation() override = default;
 
         bool run(std::vector<BasicBlock<ir::Instruction>> &blocks) override {
-            copy_map_.clear();
-
-            for (const auto &block: blocks) {
-                find_all_copies(block);
-            }
-
             bool changed = false;
-            for (auto &block: blocks) {
-                changed |= replace_copies(block);
+            for (auto &block : blocks) {
+                copy_map_.clear();
+                changed |= process_block(block);
             }
             return changed;
         }
@@ -30,60 +25,47 @@ namespace compiler::transforms {
         // dest -> src
         std::unordered_map<std::string, std::string> copy_map_;
 
-        void find_all_copies(const BasicBlock<ir::Instruction> &block) {
-            for (auto &instr: block.instructions()) {
-                if (const auto copy = instr.get_if<ir::Copy>()) {
-                    auto destination_value = copy->destination;
-                    auto source_value = copy->source;
-
-                    if (source_value.is_constant()) continue;
-
-                    auto dest = destination_value.get_variable();
-                    auto source = source_value.get_variable();
-
-                    //transitive copies
-                    while (copy_map_.contains(source)) {
-                        if (source == copy_map_[source]) break;
-                        source = copy_map_[source];
-                    }
-
-                    copy_map_[dest] = source;
-                }
-            }
-        }
-
-        bool replace_copies(BasicBlock<ir::Instruction> &block) {
+        bool process_block(BasicBlock<ir::Instruction> &block) {
             bool changed = false;
-            for (auto &instr: block.instructions()) {
+            for (auto &instr : block.instructions()) {
                 auto new_instr = instr.visit([this](auto &i) { return propagate(i); });
                 if (new_instr.has_value()) {
                     instr = std::move(new_instr.value());
                     changed = true;
                 }
-                invalidate_destination(instr);
+
+                update_copy_map(instr);
             }
             return changed;
         }
 
-        //TODO why does this work???????????????????????????????????
-        void invalidate_destination(const ir::Instruction &instr) {
+        void invalidate_variable(const std::string &var) {
+            copy_map_.erase(var);
+            std::erase_if(copy_map_, [&var](const auto &pair) {
+                return pair.second == var;
+            });
+        }
+
+        void update_copy_map(const ir::Instruction &instr) {
             if (const auto copy = instr.get_if<ir::Copy>()) {
-                auto destination_value = copy->destination;
-                if (destination_value.is_variable() && copy->source.is_constant()) {
-                    const auto& dest = destination_value.get_variable();
-                    copy_map_.erase(dest);
+                auto dest = copy->destination.get_variable();
+                invalidate_variable(dest);
+
+                if (copy->source.is_variable()) {
+                    auto src = copy->source.get_variable();
+                    while (copy_map_.contains(src)) {
+                        if (src == copy_map_[src]) break;
+                        src = copy_map_[src];
+                    }
+                    copy_map_[dest] = src;
                 }
             } else if (const auto binary = instr.get_if<ir::Binary>()) {
-                auto result_value = binary->result;
-                if (result_value.is_variable()) {
-                    const auto& dest = result_value.get_variable();
-                    copy_map_.erase(dest);
+                if (binary->result.is_variable()) {
+                    invalidate_variable(binary->result.get_variable());
                 }
             } else if (const auto unary = instr.get_if<ir::Unary>()) {
-                auto result_value = unary->result;
-                if (result_value.is_variable()) {
-                    const auto& dest = result_value.get_variable();
-                    copy_map_.erase(dest);
+                if (unary->result.is_variable()) {
+                    invalidate_variable(unary->result.get_variable());
                 }
             }
         }

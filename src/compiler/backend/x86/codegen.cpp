@@ -133,6 +133,10 @@ void compiler::x86::emitter::assemble(const ir::Copy &copy) {
     auto dest = convert_virt_reg(copy.destination);
     auto source = convert_virt_reg(copy.source);
 
+    if (dest == source) {
+        return;
+    }
+
     current_bb_.emplace_back(Mov(dest, source));
 }
 

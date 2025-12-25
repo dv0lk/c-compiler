@@ -7,6 +7,6 @@ cmkr-include = "cmake/cmkr.cmake"
 name = "compiler"
 languages = ["CXX"]
 
-[subdir.vendor]
 [subdir.src]
+[subdir.vendor]
 

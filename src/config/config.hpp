@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <filesystem>
 
+#include "util/files.hpp"
+
 class Config {
 public:
     std::string input_file;

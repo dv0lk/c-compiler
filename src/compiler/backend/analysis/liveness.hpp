@@ -1,15 +1,15 @@
 #pragma once
 #include <algorithm>
 #include <set>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "cfg.hpp"
-#include "../traits/ir.hpp"
-#include "structure/base.hpp"
+#include "structure/structure.hpp"
+#include "traits/ir.hpp"
 
-namespace compiler::analysis {
+namespace compiler {
 
     struct InstrId {
         size_t block_id;
@@ -51,6 +51,17 @@ namespace compiler::analysis {
             clear();
             computer_block_liveness(cfg);
             compute_instruction_liveness(cfg);
+        }
+
+        void analyze(const Function<InstrType>& function) {
+            auto cfg = CFG<InstrType>::from_function(function);
+            analyze(cfg);
+        }
+
+        static LivenessAnalysis get_analysis(const auto& value) {
+            LivenessAnalysis liveness;
+            liveness.analyze(value);
+            return liveness;
         }
 
         [[nodiscard]] const LiveSet& get_instr_live_in(size_t block_id, size_t instr_idx) const {
@@ -102,10 +113,10 @@ namespace compiler::analysis {
 
         [[nodiscard]] LiveSet get_all_live_variables() const {
             LiveSet all;
-            for (const auto& [id, live_set] : block_live_in_) {
+            for (const auto &live_set: block_live_in_ | std::views::values) {
                 all.insert(live_set.begin(), live_set.end());
             }
-            for (const auto& [id, live_set] : block_live_out_) {
+            for (const auto &live_set: block_live_out_ | std::views::values) {
                 all.insert(live_set.begin(), live_set.end());
             }
             return all;
@@ -169,11 +180,11 @@ namespace compiler::analysis {
                 if (!node || node->empty()) continue;
 
                 const auto& instructions = node->block->instructions();
-                size_t num_instrs = instructions.size();
+                size_t num_instr = instructions.size();
 
                 LiveSet current_live = block_live_out_[block_id];
 
-                for (size_t i = num_instrs; i > 0; --i) {
+                for (size_t i = num_instr; i > 0; --i) {
                     size_t idx = i - 1;
                     const auto& instr = instructions[idx];
                     InstrId instr_id{block_id, idx};

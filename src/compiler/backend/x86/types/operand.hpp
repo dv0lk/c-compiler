@@ -100,6 +100,7 @@ namespace compiler::x86 {
             return std::get_if<T>(&data_);
         }
 
+
         template<typename... Ts>
         [[nodiscard]] constexpr bool holds() const noexcept {
             return (std::holds_alternative<Ts>(data_) || ...);

@@ -13,10 +13,20 @@ namespace compiler {
             instructions_.push_back(instr);
         }
 
+        void push_front(const InstrType &instr) {
+            instructions_.insert(instructions_.begin(), instr);
+        }
+
         template<typename... Args>
         void emplace_back(Args &&... args) {
             instructions_.emplace_back(std::forward<Args>(args)...);
         }
+
+        void insert(size_t position, const InstrType& instr) {
+            instructions_.insert(instructions_.begin() + position, instr);
+        }
+
+
 
         [[nodiscard]] bool empty() const { return instructions_.empty(); }
         [[nodiscard]] size_t size() const { return instructions().size(); };
@@ -31,7 +41,6 @@ namespace compiler {
         [[nodiscard]] auto end() { return instructions_.end(); }
 
     private:
-        // std::string label_; TODO look into this option
         std::vector<InstrType> instructions_;
     };
 }

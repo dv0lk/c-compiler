@@ -29,16 +29,6 @@ project(compiler
 		CXX
 )
 
-# Subdirectory: vendor
-set(CMKR_CMAKE_FOLDER ${CMAKE_FOLDER})
-if(CMAKE_FOLDER)
-	set(CMAKE_FOLDER "${CMAKE_FOLDER}/vendor")
-else()
-	set(CMAKE_FOLDER vendor)
-endif()
-add_subdirectory(vendor)
-set(CMAKE_FOLDER ${CMKR_CMAKE_FOLDER})
-
 # Subdirectory: src
 set(CMKR_CMAKE_FOLDER ${CMAKE_FOLDER})
 if(CMAKE_FOLDER)
@@ -47,4 +37,14 @@ else()
 	set(CMAKE_FOLDER src)
 endif()
 add_subdirectory(src)
+set(CMAKE_FOLDER ${CMKR_CMAKE_FOLDER})
+
+# Subdirectory: vendor
+set(CMKR_CMAKE_FOLDER ${CMAKE_FOLDER})
+if(CMAKE_FOLDER)
+	set(CMAKE_FOLDER "${CMAKE_FOLDER}/vendor")
+else()
+	set(CMAKE_FOLDER vendor)
+endif()
+add_subdirectory(vendor)
 set(CMAKE_FOLDER ${CMKR_CMAKE_FOLDER})

@@ -24,10 +24,12 @@ set(compiler-lib_SOURCES
 	"compiler/backend/structure/basic_block.hpp"
 	"compiler/backend/structure/function.hpp"
 	"compiler/backend/structure/program.hpp"
+	"compiler/backend/structure/structure.hpp"
 	"compiler/backend/transforms/manager.hpp"
 	"compiler/backend/transforms/transform.hpp"
 	"compiler/backend/transforms/transforms/constant_fold.hpp"
 	"compiler/backend/transforms/transforms/copy_propagation.hpp"
+	"compiler/backend/transforms/transforms/dead_code_elem.hpp"
 	"compiler/backend/transforms/transforms/unreachable_code_elem.hpp"
 	"compiler/backend/transforms/transforms/utils.hpp"
 	"compiler/backend/x86/codegen.cpp"
@@ -38,6 +40,7 @@ set(compiler-lib_SOURCES
 	"compiler/backend/x86/types/operand.hpp"
 	"compiler/backend/x86/types/operations.hpp"
 	"compiler/backend/x86/types/regs.hpp"
+	"compiler/backend/x86/types/types.hpp"
 	"compiler/backend/x86/x86.hpp"
 	"compiler/frontend/ast/ast.hpp"
 	"compiler/frontend/ast/expressions.hpp"
@@ -49,8 +52,8 @@ set(compiler-lib_SOURCES
 	"compiler/frontend/parser.hpp"
 	"compiler/util/files.hpp"
 	"compiler/util/format/format.hpp"
-	"compiler/util/format/ir/format.hpp"
-	"compiler/util/format/x86/format.hpp"
+	"compiler/util/format/ir.hpp"
+	"compiler/util/format/x86.hpp"
 )
 
 add_library(compiler-lib INTERFACE)
