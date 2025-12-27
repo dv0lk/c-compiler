@@ -1,6 +1,6 @@
 # Reference: https://build-cpp.github.io/cmkr/cmake-toml
 [cmake]
-version = "4.1"
+version = "3.30.3"
 cmkr-include = "cmake/cmkr.cmake"
 
 [project]

@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace compiler::lexer {
-    std::vector<Token> Tokenizer::parse_tokens(const std::string& source) {
+    std::vector<Token> Tokenizer::parse_tokens(std::string_view source) {
         this->source = source;
 
         while (!is_end()) {
@@ -145,7 +145,7 @@ namespace compiler::lexer {
         current_position++;
     }
 
-    std::string Tokenizer::get_lexeme() const {
+    std::string_view Tokenizer::get_lexeme() const {
         return source.substr(start_position, current_position - start_position);
     }
 
@@ -162,7 +162,7 @@ namespace compiler::lexer {
             throw std::runtime_error("Unterminated string\n");
         }
 
-        const std::string lexeme = source.substr(start_position, current_position - start_position);
+        const auto lexeme = source.substr(start_position, current_position - start_position);
 
         add_token(TokenType::StringLiteral);
     }
@@ -193,7 +193,7 @@ namespace compiler::lexer {
             // add_token(token_type::DoubleLiteral, value);
         }
 
-        int value = std::stoi(string_value);
+        int value = std::stoi(std::string(string_value));
         add_token(TokenType::IntLiteral, value);
     }
 
@@ -233,7 +233,7 @@ namespace compiler::lexer {
         }
     }
 
-    TokenType Tokenizer::keyword_or_identifier(const std::string& str) {
+    TokenType Tokenizer::keyword_or_identifier(std::string_view str) {
         static const std::unordered_map<std::string_view, TokenType> keywords = {
             {"break", TokenType::Break},   {"continue", TokenType::Continue}, {"do", TokenType::Do},
             {"else", TokenType::Else},     {"false", TokenType::False},       {"for", TokenType::For},

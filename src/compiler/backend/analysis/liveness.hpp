@@ -1,12 +1,11 @@
 #pragma once
 #include <algorithm>
-#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 #include "cfg.hpp"
-#include "structure/structure.hpp"
+#include "core/structure.hpp"
 #include "traits/ir.hpp"
 
 namespace compiler {
@@ -41,9 +40,9 @@ namespace compiler {
         const CFG<InstrType>* cfg_ = nullptr;
 
     public:
-        void analyze(const std::vector<BasicBlock<InstrType>>& basic_blocks) {
+        void analyze(std::vector<BasicBlock<InstrType>> basic_blocks) {
             CFG<InstrType> cfg;
-            cfg.build_nodes(basic_blocks);
+            cfg.build_nodes(std::move(basic_blocks));
             analyze(cfg);
         }
 

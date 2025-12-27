@@ -10,7 +10,7 @@
 #include "analysis/cfg.hpp"
 #include "analysis/liveness.hpp"
 #include "analysis/traits/x86.hpp"
-#include "structure/function.hpp"
+#include "core/function.hpp"
 #include "types/types.hpp"
 
 namespace compiler::x86 {
@@ -258,8 +258,10 @@ namespace compiler::x86 {
             new_instructions.emplace_back(Mov(Register(RegType::RBP), Register(RegType::RSP)));
 
             // push any registers we use to stack so we can restore them
-            for (const auto reg : used_callee_saved_) {
-                new_instructions.emplace_back(Push(Register(reg)));
+            if (function.name() != "main_entry") {
+                for (const auto reg : used_callee_saved_) {
+                    new_instructions.emplace_back(Push(Register(reg)));
+                }
             }
 
             // allocate stack space for any spilled variables
@@ -276,6 +278,9 @@ namespace compiler::x86 {
         }
 
         void add_epilogue(Function<Instruction>& function) {
+            if (function.empty())
+                return;
+
             auto& old_instr = function.instructions();
             std::vector<Instruction> new_instructions;
 
@@ -286,8 +291,10 @@ namespace compiler::x86 {
                     }
 
                     // pop from the stack in reverse
-                    for (auto reg : used_callee_saved_ | std::views::reverse) {
-                        new_instructions.emplace_back(Pop(Register(reg)));
+                    if (function.name() != "main_entry") { //todo idk, kinda scuffed, maybe rethink this, same thing in prologue
+                        for (auto reg : used_callee_saved_ | std::views::reverse) {
+                            new_instructions.emplace_back(Pop(Register(reg)));
+                        }
                     }
 
                     new_instructions.emplace_back(Pop(Register(RegType::RBP)));

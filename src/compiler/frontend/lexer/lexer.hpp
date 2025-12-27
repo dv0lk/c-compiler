@@ -1,5 +1,5 @@
 #pragma once
-#include <string>
+#include <string_view>
 #include <vector>
 
 #include "token.hpp"
@@ -7,9 +7,9 @@
 namespace compiler::lexer {
     class Tokenizer {
     public:
-        [[nodiscard]] std::vector<Token> parse_tokens(const std::string& source);
+        [[nodiscard]] std::vector<Token> parse_tokens(std::string_view source);
 
-        [[nodiscard]] static std::vector<Token> get_tokens(const std::string& source) {
+        [[nodiscard]] static std::vector<Token> get_tokens(std::string_view source) {
             Tokenizer t;
             return t.parse_tokens(source);
         }
@@ -17,7 +17,7 @@ namespace compiler::lexer {
         void print_tokens() const;
 
     private:
-        std::string source;
+        std::string_view source;
         std::vector<Token> tokens;
         int start_position = 0;
         int current_position = 0;
@@ -49,8 +49,8 @@ namespace compiler::lexer {
 
         void skip_multiline_comment();
 
-        [[nodiscard]] std::string get_lexeme() const;
+        [[nodiscard]] std::string_view get_lexeme() const;
 
-        [[nodiscard]] static TokenType keyword_or_identifier(const std::string& str);
+        [[nodiscard]] static TokenType keyword_or_identifier(std::string_view str);
     };
 } // namespace compiler::lexer

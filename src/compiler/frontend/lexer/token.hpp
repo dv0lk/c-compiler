@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -75,14 +76,14 @@ namespace compiler {
     class Token {
     private:
         TokenType type;
-        std::string lexeme;
+        std::string_view lexeme;
         // todo right now we only support int
         std::optional<int> literal;
 
     public:
-        Token(const TokenType type, std::string lexeme, const std::optional<int>& literal): type(type), lexeme(std::move(lexeme)), literal(literal) { }
+        Token(const TokenType type, std::string_view lexeme, const std::optional<int>& literal): type(type), lexeme(lexeme), literal(literal) { }
 
-        Token(const TokenType type, std::string lexeme): type(type), lexeme(std::move(lexeme)) { }
+        Token(const TokenType type, std::string_view lexeme): type(type), lexeme(lexeme) { }
 
         [[nodiscard]] TokenType get_type() const {
             return type;
@@ -92,7 +93,7 @@ namespace compiler {
             return literal;
         }
 
-        [[nodiscard]] std::string get_lexeme() const {
+        [[nodiscard]] std::string_view get_lexeme() const {
             return lexeme;
         }
 

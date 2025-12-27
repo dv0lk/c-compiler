@@ -76,8 +76,8 @@ namespace compiler::ast::stmt {
         }
 
         template <typename T>
-        [[nodiscard]] const T& get_if() const {
-            return std::get_if<T>(data_);
+        [[nodiscard]] const T* get_if() const {
+            return std::get_if<T>(&data_);
         }
 
         template <typename Visitor>

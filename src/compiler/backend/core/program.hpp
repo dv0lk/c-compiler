@@ -1,6 +1,5 @@
 #pragma once
 #include "function.hpp"
-#include <span>
 #include <vector>
 
 namespace compiler {

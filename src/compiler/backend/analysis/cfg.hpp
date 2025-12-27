@@ -7,9 +7,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "core/basic_block.hpp"
+#include "core/function.hpp"
 #include "node.hpp"
-#include "structure/basic_block.hpp"
-#include "structure/function.hpp"
 #include "traits/traits.hpp"
 
 namespace compiler {
@@ -73,15 +73,15 @@ namespace compiler {
             node_to->remove_predecessor(from);
         }
 
-        void build_nodes(const std::span<const bb_t>& blocks) {
+        void build_nodes(std::vector<bb_t> blocks) {
             nodes_[START_NODE] = node_t{};
             nodes_[EXIT_NODE] = node_t{};
 
             std::vector<size_t> block_ids;
 
             block_ids.push_back(START_NODE);
-            for (const auto& block : blocks) {
-                block_ids.push_back(add_node(block));
+            for (auto& block : blocks) {
+                block_ids.push_back(add_node(std::move(block)));
             }
             block_ids.push_back(EXIT_NODE);
 
@@ -156,7 +156,7 @@ namespace compiler {
             throw std::runtime_error("Encountered label that was not in cache");
         }
 
-        size_t add_node(const bb_t& block) {
+        size_t add_node(bb_t block) {
             const size_t id = next_node_id_++;
 
             // cache label, labels should always be the first instruction in bb
@@ -165,13 +165,13 @@ namespace compiler {
                 label_cache_[label] = id;
             }
 
-            nodes_[id] = Node(block);
+            nodes_[id] = Node(std::move(block));
             return id;
         }
 
-        static CFG from_bbs(const std::span<const bb_t>& blocks) {
+        static CFG from_bbs(std::vector<bb_t> blocks) {
             CFG cfg;
-            cfg.build_nodes(blocks);
+            cfg.build_nodes(std::move(blocks));
             return cfg;
         }
 
@@ -215,7 +215,7 @@ namespace compiler {
         static CFG from_instructions(std::span<const InstrType> instructions) {
             CFG cfg;
             auto blocks = compute_basic_blocks(instructions);
-            cfg.build_nodes(blocks);
+            cfg.build_nodes(std::move(blocks));
             return cfg;
         }
 

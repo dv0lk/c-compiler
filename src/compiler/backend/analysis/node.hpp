@@ -1,21 +1,21 @@
 #pragma once
-#include <memory>
+#include <optional>
 #include <unordered_set>
 
-#include "structure/basic_block.hpp"
+#include "core/basic_block.hpp"
 
 namespace compiler {
     template <typename InstrType>
     struct Node {
         using bb_t = BasicBlock<InstrType>;
 
-        std::shared_ptr<bb_t> block;
+        std::optional<bb_t> block;
         std::unordered_set<size_t> successors;
         std::unordered_set<size_t> predecessors;
 
         Node() = default;
 
-        explicit Node(const bb_t& block): block(std::make_shared<bb_t>(block)) { }
+        explicit Node(bb_t block): block(std::move(block)) { }
 
         void add_successor(const size_t id) {
             successors.insert(id);
@@ -39,7 +39,7 @@ namespace compiler {
         }
 
         [[nodiscard]] bool has_block() const {
-            return block != nullptr;
+            return block.has_value();
         }
 
         [[nodiscard]] bool empty() const {

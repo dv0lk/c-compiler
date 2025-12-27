@@ -1,5 +1,5 @@
 #pragma once
-#include "structure/program.hpp"
+#include "core/program.hpp"
 #include "transform.hpp"
 #include <memory>
 #include <vector>

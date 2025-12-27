@@ -2,9 +2,9 @@
 #include <print>
 #include <vector>
 
+#include "core/program.hpp"
 #include "frontend/ast/ast.hpp"
-#include "misc/resolver.hpp"
-#include "structure/program.hpp"
+#include "resolver.hpp"
 #include "types/instruction.hpp"
 
 namespace compiler::ir {

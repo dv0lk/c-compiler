@@ -1,9 +1,9 @@
 #pragma once
 #include <array>
 
+#include "core/program.hpp"
 #include "ir/types/instruction.hpp"
 #include "ir/types/operand.hpp"
-#include "structure/program.hpp"
 #include "types/instruction.hpp"
 
 namespace compiler::x86 {
