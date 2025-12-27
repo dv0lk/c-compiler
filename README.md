@@ -3,7 +3,7 @@ Small toy C compiler with an LLVM like design, written in C++23. Implements a le
 ## Build 
 ```commandline
 cmake -B build
-cmake --build build config Release
+cmake --build build --config Release
 ```
 ## Usage
 ```commandline
