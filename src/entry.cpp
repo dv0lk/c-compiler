@@ -43,6 +43,8 @@ namespace compiler {
         allocator.run_on_program(x86);
 
         if (config.print_x86) {
+            std::ofstream file ("output.asm");
+            std::println(file, "{}", x86);
             std::println("{}", x86);
         }
     }
