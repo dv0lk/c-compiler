@@ -1,8 +1,8 @@
 #include "emitter.hpp"
 
 namespace compiler::ir {
-    Program<Instruction> Emitter::emit(const std::vector<ast::stmt::stmt_ptr> &ast) {
-        for (const auto &stmt: ast) {
+    Program<Instruction> Emitter::emit(const std::vector<ast::stmt::stmt_ptr>& ast) {
+        for (const auto& stmt : ast) {
             emit_stmt(stmt);
         }
 
@@ -16,7 +16,7 @@ namespace compiler::ir {
         }
     }
 
-    void Emitter::start_new_function(const std::string &function_name) {
+    void Emitter::start_new_function(const std::string& function_name) {
         finalize_current_function();
         current_function_ = function_t{function_name};
     }
@@ -25,44 +25,42 @@ namespace compiler::ir {
         return "t" + std::to_string(var_counter_++);
     }
 
-    [[nodiscard]] std::string Emitter::make_label(const std::string &label) {
+    [[nodiscard]] std::string Emitter::make_label(const std::string& label) {
         return label + "_" + std::to_string(label_counter_++);
     }
 
-    [[nodiscard]] std::string Emitter::make_variable_name(const std::string &name, size_t scope_id) {
+    [[nodiscard]] std::string Emitter::make_variable_name(const std::string& name, size_t scope_id) {
         return name + "_" + std::to_string(scope_id);
     }
 
-    void Emitter::emit_stmt(const ast::stmt::stmt_ptr &stmt_var) {
-        stmt_var->visit([this](const auto &stmt) {
-            emit_stmt(stmt);
-        });
+    void Emitter::emit_stmt(const ast::stmt::stmt_ptr& stmt_var) {
+        stmt_var->visit([this](const auto& stmt) { emit_stmt(stmt); });
     }
 
-    void Emitter::emit_stmt(const ast::stmt::Return &ret) {
+    void Emitter::emit_stmt(const ast::stmt::Return& ret) {
         const auto ret_value = emit_expr(ret.value);
         current_function_.emplace_back(Return{ret_value});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::Expression &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::Expression& stmt) {
         emit_expr(stmt.expr);
     }
 
-    void Emitter::emit_stmt(const ast::stmt::Block &block) {
+    void Emitter::emit_stmt(const ast::stmt::Block& block) {
         resolver_.begin_scope();
 
         if (block.statements.empty()) {
             throw std::runtime_error("Empty statement block");
         }
 
-        for (const auto &s: block.statements) {
+        for (const auto& s : block.statements) {
             emit_stmt(s);
         }
 
         resolver_.end_scope();
     }
 
-    void Emitter::emit_stmt(const ast::stmt::If &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::If& stmt) {
         const std::string then_label = make_label("if_then");
         const std::string end_label = make_label("if_end");
         const std::string else_label = stmt.else_branch.has_value() ? make_label("if_else") : end_label;
@@ -81,7 +79,7 @@ namespace compiler::ir {
         current_function_.emplace_back(Label{end_label});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::While &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::While& stmt) {
         const std::string cond_label = make_label("while_cond");
         const std::string body_label = make_label("while_body");
         const std::string end_label = make_label("while_end");
@@ -100,16 +98,16 @@ namespace compiler::ir {
         current_function_.emplace_back(Label{end_label});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::FunctionParam &param) {
+    void Emitter::emit_stmt(const ast::stmt::FunctionParam& param) {
         const auto scope_id = resolver_.declare(param.name);
         current_function_.add_param(make_variable_name(param.name, scope_id.value()));
     }
 
-    void Emitter::emit_stmt(const ast::stmt::FunctionDecl &func) {
+    void Emitter::emit_stmt(const ast::stmt::FunctionDecl& func) {
         start_new_function(func.function_name + "_entry");
         resolver_.begin_scope();
 
-        for (const auto &param : func.params) {
+        for (const auto& param : func.params) {
             emit_stmt(param);
         }
 
@@ -119,7 +117,7 @@ namespace compiler::ir {
         resolver_.end_scope();
     }
 
-    void Emitter::emit_stmt(const ast::stmt::Variable &variable) {
+    void Emitter::emit_stmt(const ast::stmt::Variable& variable) {
         const auto scope_id = resolver_.declare(variable.name);
 
         if (variable.initializer.has_value()) {
@@ -132,18 +130,15 @@ namespace compiler::ir {
         throw std::runtime_error("Something went wrong");
     }
 
-
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::expr_ptr &expr_var) {
-        return expr_var->visit([this](const auto &stmt) {
-            return this->emit_expr(stmt);
-        });
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::expr_ptr& expr_var) {
+        return expr_var->visit([this](const auto& stmt) { return this->emit_expr(stmt); });
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Literal &literal) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Literal& literal) {
         return literal.value;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Variable &variable) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Variable& variable) {
         const auto resolved = resolver_.resolve(variable.name);
 
         if (!resolved.has_value()) {
@@ -153,7 +148,7 @@ namespace compiler::ir {
         return {make_variable_name(variable.name, resolved.value())};
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Binary &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Binary& expr) {
         auto left = emit_expr(expr.left);
         auto right = emit_expr(expr.right);
         auto result = Operand{make_tmp_var()};
@@ -162,7 +157,7 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Unary &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Unary& expr) {
         auto operand = emit_expr(expr.value);
         auto result = Operand(make_tmp_var());
 
@@ -170,11 +165,11 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Grouping &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Grouping& expr) {
         return emit_expr(expr.expr);
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Assignment &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Assignment& expr) {
         auto value = emit_expr(expr.value);
         const auto resolved = resolver_.resolve(expr.name);
 
@@ -182,17 +177,17 @@ namespace compiler::ir {
             throw std::runtime_error("Undefined variable assignment");
         }
 
-        auto destination= Operand(make_variable_name(expr.name, resolved.value()));
+        auto destination = Operand(make_variable_name(expr.name, resolved.value()));
         current_function_.emplace_back(Copy{destination, value});
         return destination;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Logical &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Logical& expr) {
         const std::string short_circuit_label = make_label("short_circuit");
         const std::string end_label = make_label("logical_end");
 
         auto left = emit_expr(expr.left);
-        auto result= Operand(make_tmp_var());
+        auto result = Operand(make_tmp_var());
 
         if (expr.op == TokenType::LogicalAnd) {
             current_function_.emplace_back(JumpIfZero{left, short_circuit_label});
@@ -221,9 +216,9 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Call &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Call& expr) {
         std::vector<Operand> arguments;
-        for (const auto &arg: expr.arguments) {
+        for (const auto& arg : expr.arguments) {
             arguments.push_back(emit_expr(arg));
         }
 
@@ -232,4 +227,4 @@ namespace compiler::ir {
 
         return result;
     }
-}
+} // namespace compiler::ir

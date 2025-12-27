@@ -1,16 +1,16 @@
-#include "compiler/frontend/lexer/lexer.hpp"
-#include "compiler/frontend/parser.hpp"
+#include "backend/analysis/cfg.hpp"
 #include "backend/ir/emitter.hpp"
-#include <print>
 #include "backend/transforms/manager.hpp"
 #include "backend/transforms/transforms/constant_fold.hpp" // TODO: Consider creating a single header for all transforms
 #include "backend/transforms/transforms/copy_propagation.hpp"
 #include "backend/transforms/transforms/dead_code_elem.hpp"
 #include "backend/x86/codegen.hpp"
-#include "backend/analysis/cfg.hpp"
+#include "compiler/frontend/lexer/lexer.hpp"
+#include "compiler/frontend/parser.hpp"
 #include "config/config.hpp"
 #include "util/format/format.hpp"
 #include "x86/reg_alloc.hpp"
+#include <print>
 
 namespace compiler {
     void startup(const Config& config) {
@@ -23,7 +23,6 @@ namespace compiler {
         tm.register_transform<transforms::DeadCodeElim<ir::Instruction>>();
         tm.run_on_program(ir);
         std::println("{}", ir);
-
 
         auto x86 = x86::Emitter::get_x86(ir);
         // std::println("{}", x86);
@@ -42,14 +41,12 @@ namespace compiler {
         // tm.run_on_program(ir);
         // std::println("{}", ir::printer::to_string(ir));
     }
-}
-
+} // namespace compiler
 
 int main(int argc, char* argv[]) {
     Config config;
     config.init(argc, argv);
     compiler::startup(config);
-
 
     // return 0;
     // const auto project_path = std::filesystem::current_path().parent_path();
@@ -60,5 +57,4 @@ int main(int argc, char* argv[]) {
     //     throw std::runtime_error("Failed to read file");
     //
     // const std::string source = {file->begin(), file->end()};
-
 }

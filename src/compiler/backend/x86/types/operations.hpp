@@ -11,13 +11,9 @@ namespace compiler::x86 {
 
         Mov() = default;
 
-        Mov(const Operand &destination, const Operand &source)
-            : destination(destination), source(source) {
-        }
+        Mov(const Operand& destination, const Operand& source): destination(destination), source(source) { }
 
-        Mov(Operand &&destination, Operand &&source)
-            : destination(std::move(destination)), source(std::move(source)) {
-        }
+        Mov(Operand&& destination, Operand&& source): destination(std::move(destination)), source(std::move(source)) { }
     };
 
     struct Ret {
@@ -29,9 +25,7 @@ namespace compiler::x86 {
 
         Neg() = default;
 
-        explicit Neg(Operand value)
-            : value(std::move(value)) {
-        }
+        explicit Neg(Operand value): value(std::move(value)) { }
     };
 
     struct Not {
@@ -39,9 +33,7 @@ namespace compiler::x86 {
 
         Not() = default;
 
-        explicit Not(Operand value)
-            : value(std::move(value)) {
-        }
+        explicit Not(Operand value): value(std::move(value)) { }
     };
 
     struct Add {
@@ -50,9 +42,7 @@ namespace compiler::x86 {
 
         Add() = default;
 
-        Add(Operand destination, Operand source)
-            : destination(std::move(destination)), source(std::move(source)) {
-        }
+        Add(Operand destination, Operand source): destination(std::move(destination)), source(std::move(source)) { }
     };
 
     struct Sub {
@@ -61,9 +51,7 @@ namespace compiler::x86 {
 
         Sub() = default;
 
-        Sub(Operand destination, Operand source)
-            : destination(std::move(destination)), source(std::move(source)) {
-        }
+        Sub(Operand destination, Operand source): destination(std::move(destination)), source(std::move(source)) { }
     };
 
     struct Imul {
@@ -72,9 +60,7 @@ namespace compiler::x86 {
 
         Imul() = default;
 
-        Imul(Operand destination, Operand source)
-            : destination(std::move(destination)), source(std::move(source)) {
-        }
+        Imul(Operand destination, Operand source): destination(std::move(destination)), source(std::move(source)) { }
     };
 
     struct Cdq {
@@ -86,9 +72,7 @@ namespace compiler::x86 {
 
         Idiv() = default;
 
-        explicit Idiv(Operand value)
-            : value(std::move(value)) {
-        }
+        explicit Idiv(Operand value): value(std::move(value)) { }
     };
 
     struct Cmp {
@@ -97,9 +81,7 @@ namespace compiler::x86 {
 
         Cmp() = default;
 
-        Cmp(Operand destination, Operand source)
-            : destination(std::move(destination)), source(std::move(source)) {
-        }
+        Cmp(Operand destination, Operand source): destination(std::move(destination)), source(std::move(source)) { }
     };
 
     struct Label {
@@ -107,12 +89,9 @@ namespace compiler::x86 {
 
         Label() = default;
 
-        explicit Label(LabelOp target)
-            : target(std::move(target)) {
-        }
+        explicit Label(LabelOp target): target(std::move(target)) { }
 
-        explicit Label(std::string target) : target(LabelOp(std::move(target))) {
-        }
+        explicit Label(std::string target): target(LabelOp(std::move(target))) { }
     };
 
     struct Jmp {
@@ -120,9 +99,7 @@ namespace compiler::x86 {
 
         Jmp() = default;
 
-        explicit Jmp(LabelOp target)
-            : target(std::move(target)) {
-        }
+        explicit Jmp(LabelOp target): target(std::move(target)) { }
     };
 
     struct JmpCC {
@@ -131,9 +108,7 @@ namespace compiler::x86 {
 
         JmpCC() = default;
 
-        JmpCC(const CC condition, LabelOp target)
-            : condition(condition), target(std::move(target)) {
-        }
+        JmpCC(const CC condition, LabelOp target): condition(condition), target(std::move(target)) { }
     };
 
     struct SetCC {
@@ -142,9 +117,7 @@ namespace compiler::x86 {
 
         SetCC() = default;
 
-        SetCC(const CC condition, Operand value)
-            : condition(condition), value(std::move(value)) {
-        }
+        SetCC(const CC condition, Operand value): condition(condition), value(std::move(value)) { }
     };
 
     struct Push {
@@ -152,9 +125,7 @@ namespace compiler::x86 {
 
         Push() = default;
 
-        explicit Push(Operand value)
-            : value(std::move(value)) {
-        }
+        explicit Push(Operand value): value(std::move(value)) { }
     };
 
     struct Pop {
@@ -162,9 +133,7 @@ namespace compiler::x86 {
 
         Pop() = default;
 
-        explicit Pop(Operand value)
-            : value(std::move(value)) {
-        }
+        explicit Pop(Operand value): value(std::move(value)) { }
     };
 
     struct Call {
@@ -172,8 +141,6 @@ namespace compiler::x86 {
 
         Call() = default;
 
-        explicit Call(Operand target)
-            : target(std::move(target)) {
-        }
+        explicit Call(Operand target): target(std::move(target)) { }
     };
-}
+} // namespace compiler::x86

@@ -7,16 +7,14 @@
 #include "types/instruction.hpp"
 
 namespace compiler::x86 {
-    //calling convention register order
-    inline constexpr std::array ARG_REGISTERS = {
-        RegType::RDI, RegType::RSI, RegType::RDX, RegType::RCX, RegType::R8, RegType::R9
-    };
+    // calling convention register order
+    inline constexpr std::array ARG_REGISTERS = {RegType::RDI, RegType::RSI, RegType::RDX, RegType::RCX, RegType::R8, RegType::R9};
 
     class Emitter {
     public:
-        Program<Instruction> emit(const Program<ir::Instruction> &ir_program);
+        Program<Instruction> emit(const Program<ir::Instruction>& ir_program);
 
-        [[nodiscard]] static Program<Instruction> get_x86(const Program<ir::Instruction> &ir_program) {
+        [[nodiscard]] static Program<Instruction> get_x86(const Program<ir::Instruction>& ir_program) {
             Emitter assembler;
             return assembler.emit(ir_program);
         }
@@ -48,4 +46,4 @@ namespace compiler::x86 {
         void assemble(const ir::FunctionCall&);
     };
 
-}
+} // namespace compiler::x86

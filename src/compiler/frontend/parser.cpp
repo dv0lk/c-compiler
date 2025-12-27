@@ -1,9 +1,8 @@
 #include "parser.hpp"
 #include <stdexcept>
 
-
 namespace compiler::ast {
-    std::vector<stmt::stmt_ptr> Parser::parse_ast(std::vector<Token> &tokens) {
+    std::vector<stmt::stmt_ptr> Parser::parse_ast(std::vector<Token>& tokens) {
         // TODO: Stop copying tokens
         this->tokens = tokens;
         while (!is_end()) {
@@ -43,7 +42,7 @@ namespace compiler::ast {
         return peek().get_type() == type;
     }
 
-    Token Parser::consume(const TokenType type, const std::string &error_message) {
+    Token Parser::consume(const TokenType type, const std::string& error_message) {
         if (check(type)) {
             return advance();
         }
@@ -158,7 +157,7 @@ namespace compiler::ast {
         throw std::runtime_error("Encounter Unknown expression while parsing");
     }
 
-    expr::expr_ptr Parser::parse_call(const std::string &name) {
+    expr::expr_ptr Parser::parse_call(const std::string& name) {
         std::vector<expr::expr_ptr> arguments;
 
         if (!check(TokenType::RightParen)) {
@@ -209,7 +208,7 @@ namespace compiler::ast {
         return parse_statement();
     }
 
-    //todo add support for multiple types
+    // todo add support for multiple types
     stmt::stmt_ptr Parser::parse_variable_declaration() {
         std::string variable_name = consume(TokenType::Identifier, "Expected identifier after type").get_lexeme();
 
@@ -230,7 +229,7 @@ namespace compiler::ast {
         std::vector<stmt::FunctionParam> params;
         if (!check(TokenType::RightParen)) {
             do {
-                //todo currently support only int
+                // todo currently support only int
                 auto param_type = consume(TokenType::Int, "Expected parameter type").get_type();
                 auto param_name = consume(TokenType::Identifier, "Expected parameter name").get_lexeme();
                 params.emplace_back(param_name, param_type);
@@ -290,4 +289,4 @@ namespace compiler::ast {
         consume(TokenType::Semicolon, "Expected ';' after return statement");
         return return_stmt;
     }
-}
+} // namespace compiler::ast

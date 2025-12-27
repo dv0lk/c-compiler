@@ -9,20 +9,20 @@
 
 #include "node.hpp"
 #include "structure/basic_block.hpp"
+#include "structure/function.hpp"
 #include "traits/traits.hpp"
 
 namespace compiler {
     static constexpr size_t START_NODE = 0;
     static constexpr size_t EXIT_NODE = std::numeric_limits<size_t>::max() - 1;
 
-    template<typename InstrType>
+    template <typename InstrType>
     class CFG {
     public:
         using traits = InstructionTrait<InstrType>;
         using bb_t = BasicBlock<InstrType>;
         using func_t = Function<InstrType>;
         using node_t = Node<InstrType>;
-
 
     private:
         std::string name_;
@@ -73,14 +73,14 @@ namespace compiler {
             node_to->remove_predecessor(from);
         }
 
-        void build_nodes(const std::span<const bb_t> &blocks) {
+        void build_nodes(const std::span<const bb_t>& blocks) {
             nodes_[START_NODE] = node_t{};
             nodes_[EXIT_NODE] = node_t{};
 
             std::vector<size_t> block_ids;
 
             block_ids.push_back(START_NODE);
-            for (const auto &block: blocks) {
+            for (const auto& block : blocks) {
                 block_ids.push_back(add_node(block));
             }
             block_ids.push_back(EXIT_NODE);
@@ -88,7 +88,7 @@ namespace compiler {
             build_edges(block_ids);
         }
 
-        void build_edges(const std::vector<size_t> &node_ids) {
+        void build_edges(const std::vector<size_t>& node_ids) {
             for (size_t i = 0; i < node_ids.size(); ++i) {
                 const auto current_id = node_ids[i];
 
@@ -100,19 +100,19 @@ namespace compiler {
                     continue;
                 }
 
-                const auto &current_node = nodes_[current_id];
+                const auto& current_node = nodes_[current_id];
 
                 if (!current_node.has_block()) {
                     continue;
                 }
 
-                const auto &curr_block = current_node.block;
+                const auto& curr_block = current_node.block;
 
                 if (curr_block->empty()) {
                     continue;
                 }
 
-                const auto &last_instruction = curr_block->instructions().back();
+                const auto& last_instruction = curr_block->instructions().back();
 
                 if (!traits::is_terminator(last_instruction)) {
                     add_edge(current_id, node_ids[i + 1]);
@@ -148,7 +148,7 @@ namespace compiler {
             return it != nodes_.end() ? &it->second : nullptr;
         }
 
-        [[nodiscard]] std::size_t find_by_label(const std::string &label) const {
+        [[nodiscard]] std::size_t find_by_label(const std::string& label) const {
             auto it = label_cache_.find(label);
             if (it != label_cache_.end()) {
                 return it->second;
@@ -156,12 +156,12 @@ namespace compiler {
             throw std::runtime_error("Encountered label that was not in cache");
         }
 
-        size_t add_node(const bb_t &block) {
+        size_t add_node(const bb_t& block) {
             const size_t id = next_node_id_++;
 
-            //cache label, labels should always be the first instruction in bb
+            // cache label, labels should always be the first instruction in bb
             if (!block.empty() && traits::is_label(block.instructions().front())) {
-                const auto &label = traits::get_label_name(block.instructions().front());
+                const auto& label = traits::get_label_name(block.instructions().front());
                 label_cache_[label] = id;
             }
 
@@ -169,14 +169,15 @@ namespace compiler {
             return id;
         }
 
-        static CFG from_bbs(const std::span<const bb_t> &blocks) {
+        static CFG from_bbs(const std::span<const bb_t>& blocks) {
             CFG cfg;
             cfg.build_nodes(blocks);
             return cfg;
         }
 
         static std::vector<bb_t> compute_basic_blocks(std::span<const InstrType> instructions) {
-            if (instructions.empty()) return {};
+            if (instructions.empty())
+                return {};
 
             std::unordered_set<size_t> leaders;
             leaders.insert(0);
@@ -199,9 +200,7 @@ namespace compiler {
 
             for (size_t i = 0; i < sorted_leaders.size(); ++i) {
                 size_t start = sorted_leaders[i];
-                size_t end = (i + 1 < sorted_leaders.size())
-                           ? sorted_leaders[i + 1]
-                           : instructions.size();
+                size_t end = (i + 1 < sorted_leaders.size()) ? sorted_leaders[i + 1] : instructions.size();
 
                 bb_t block;
                 for (size_t j = start; j < end; ++j) {
@@ -220,8 +219,8 @@ namespace compiler {
             return cfg;
         }
 
-        static CFG from_function(const func_t &function) {
+        static CFG from_function(const func_t& function) {
             return from_instructions(function.instructions());
         }
     };
-}
+} // namespace compiler

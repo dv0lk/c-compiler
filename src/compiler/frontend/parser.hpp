@@ -1,14 +1,13 @@
 #pragma once
-#include <vector>
 #include "ast/ast.hpp"
-
+#include <vector>
 
 namespace compiler::ast {
     class Parser {
     public:
-        [[nodiscard]] std::vector<stmt::stmt_ptr> parse_ast(std::vector<Token> &tokens);
+        [[nodiscard]] std::vector<stmt::stmt_ptr> parse_ast(std::vector<Token>& tokens);
 
-        [[nodiscard]] static std::vector<stmt::stmt_ptr> get_ast(std::vector<Token> &tokens) {
+        [[nodiscard]] static std::vector<stmt::stmt_ptr> get_ast(std::vector<Token>& tokens) {
             Parser p;
             return p.parse_ast(tokens);
         }
@@ -28,7 +27,7 @@ namespace compiler::ast {
             return false;
         }
 
-        template<typename... Types>
+        template <typename... Types>
         bool match(Types... types) {
             return (check_and_advance(types) || ...);
         }
@@ -43,7 +42,7 @@ namespace compiler::ast {
 
         [[nodiscard]] bool check(TokenType type) const;
 
-        Token consume(TokenType type, const std::string &error_message);
+        Token consume(TokenType type, const std::string& error_message);
 
         expr::expr_ptr parse_expression();
 
@@ -65,7 +64,7 @@ namespace compiler::ast {
 
         expr::expr_ptr parse_primary_expr();
 
-        expr::expr_ptr parse_call(const std::string &name);
+        expr::expr_ptr parse_call(const std::string& name);
 
         stmt::stmt_ptr parse_statement();
 
@@ -85,5 +84,4 @@ namespace compiler::ast {
 
         stmt::stmt_ptr parse_function_declaration();
     };
-}
-
+} // namespace compiler::ast

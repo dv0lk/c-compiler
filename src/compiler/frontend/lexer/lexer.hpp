@@ -53,5 +53,4 @@ namespace compiler::lexer {
 
         [[nodiscard]] static TokenType keyword_or_identifier(const std::string& str);
     };
-}
-
+} // namespace compiler::lexer

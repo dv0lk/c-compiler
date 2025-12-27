@@ -22,7 +22,7 @@ public:
         scopes.pop_back();
     }
 
-    std::optional<int> declare(const std::string &name) {
+    std::optional<int> declare(const std::string& name) {
         if (scopes.empty())
             return std::nullopt;
 
@@ -30,8 +30,8 @@ public:
         return count;
     }
 
-    std::optional<int> resolve(const std::string &name) {
-        for (const auto &scope: std::views::reverse(scopes)) {
+    std::optional<int> resolve(const std::string& name) {
+        for (const auto& scope : std::views::reverse(scopes)) {
             if (scope.contains(name)) {
                 return scope.at(name);
             }

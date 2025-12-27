@@ -6,13 +6,12 @@
 
 #include "expressions.hpp"
 
-
 namespace compiler::ast::stmt {
     class stmt;
     using stmt_ptr = std::shared_ptr<stmt>;
 
-    template<typename T, typename... Args>
-    [[nodiscard]] stmt_ptr make_stmt(Args &&... args) {
+    template <typename T, typename... Args>
+    [[nodiscard]] stmt_ptr make_stmt(Args&&... args) {
         return std::make_shared<stmt>(T{std::forward<Args>(args)...});
     }
 
@@ -64,28 +63,26 @@ namespace compiler::ast::stmt {
 
     class stmt {
     private:
-        using variant_t = std::variant<Return, Expression, If, While, FunctionParam,
-            FunctionDecl, Block, Variable>;
+        using variant_t = std::variant<Return, Expression, If, While, FunctionParam, FunctionDecl, Block, Variable>;
         variant_t data_;
 
     public:
-        template<typename T>
-        explicit stmt(T &&value) : data_(std::forward<T>(value)) {
-        }
+        template <typename T>
+        explicit stmt(T&& value): data_(std::forward<T>(value)) { }
 
-        template<typename T>
+        template <typename T>
         [[nodiscard]] constexpr bool holds() const noexcept {
             return std::holds_alternative<T>(data_);
         }
 
-        template<typename T>
-        [[nodiscard]] const T &get_if() const {
+        template <typename T>
+        [[nodiscard]] const T& get_if() const {
             return std::get_if<T>(data_);
         }
 
-        template<typename Visitor>
-        constexpr auto visit(Visitor &&visitor) const {
+        template <typename Visitor>
+        constexpr auto visit(Visitor&& visitor) const {
             return std::visit(std::forward<Visitor>(visitor), data_);
         }
     };
-}
+} // namespace compiler::ast::stmt

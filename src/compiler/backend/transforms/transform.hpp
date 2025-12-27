@@ -3,10 +3,10 @@
 #include <vector>
 
 namespace compiler {
-    template<typename InstrType>
+    template <typename InstrType>
     class CFG;
 
-    template<typename InstrType>
+    template <typename InstrType>
     class Transform {
     public:
         Transform() = default;
@@ -14,4 +14,4 @@ namespace compiler {
 
         [[nodiscard]] virtual bool run(std::vector<InstrType>& instructions) = 0;
     };
-}
+} // namespace compiler

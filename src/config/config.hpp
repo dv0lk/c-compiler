@@ -22,29 +22,17 @@ public:
         parser_.add_description("A simple C compiler");
         parser_.add_epilog("Example: compiler input.c --ast --ir-before-opt");
 
-        parser_.add_argument("input")
-            .help("input source file (.c)")
-            .required();
+        parser_.add_argument("input").help("input source file (.c)").required();
 
-        parser_.add_argument("--ast")
-            .help("print the AST")
-            .flag();
+        parser_.add_argument("--ast").help("print the AST").flag();
 
-        parser_.add_argument("--ir")
-            .help("print IR (after optimizations)")
-            .flag();
+        parser_.add_argument("--ir").help("print IR (after optimizations)").flag();
 
-        parser_.add_argument("--ir-no-opt")
-            .help("print IR before optimizations")
-            .flag();
+        parser_.add_argument("--ir-no-opt").help("print IR before optimizations").flag();
 
-        parser_.add_argument("--x86")
-            .help("print x86 assembly (after optimizations)")
-            .flag();
+        parser_.add_argument("--x86").help("print x86 assembly (after optimizations)").flag();
 
-        parser_.add_argument("--x86-no-opt")
-            .help("print x86 assembly before optimizations")
-            .flag();
+        parser_.add_argument("--x86-no-opt").help("print x86 assembly before optimizations").flag();
 
         // parser_.add_argument("-o", "--output")
         //     .help("output file path")

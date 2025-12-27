@@ -153,7 +153,6 @@ namespace compiler::lexer {
         tokens.emplace_back(type, get_lexeme(), literal);
     }
 
-
     void Tokenizer::consume_string() {
         while (peek() != '"' && !is_end()) {
             advance();
@@ -168,7 +167,7 @@ namespace compiler::lexer {
         add_token(TokenType::StringLiteral);
     }
 
-    //todo handle double/float values
+    // todo handle double/float values
     void Tokenizer::consume_digit() {
         bool is_decimal = false;
 
@@ -236,30 +235,14 @@ namespace compiler::lexer {
 
     TokenType Tokenizer::keyword_or_identifier(const std::string& str) {
         static const std::unordered_map<std::string_view, TokenType> keywords = {
-            {"break", TokenType::Break},
-            {"continue", TokenType::Continue},
-            {"do", TokenType::Do},
-            {"else", TokenType::Else},
-            {"false", TokenType::False},
-            {"for", TokenType::For},
-            {"if", TokenType::If},
-            {"return", TokenType::Return},
-            {"true", TokenType::True},
-            {"while", TokenType::While},
-            {"continue", TokenType::Continue},
-            {"else", TokenType::Else},
-            {"false", TokenType::False},
-            {"for", TokenType::For},
-            {"if", TokenType::If},
-            {"return", TokenType::Return},
-            {"true", TokenType::True},
-            {"while", TokenType::While},
-            {"int", TokenType::Int},
-            {"void", TokenType::Void},
-            {"float", TokenType::Float},
-            {"char", TokenType::Char},
-            {"bool", TokenType::Bool},
-            {"goto", TokenType::Goto},
+            {"break", TokenType::Break},   {"continue", TokenType::Continue}, {"do", TokenType::Do},
+            {"else", TokenType::Else},     {"false", TokenType::False},       {"for", TokenType::For},
+            {"if", TokenType::If},         {"return", TokenType::Return},     {"true", TokenType::True},
+            {"while", TokenType::While},   {"continue", TokenType::Continue}, {"else", TokenType::Else},
+            {"false", TokenType::False},   {"for", TokenType::For},           {"if", TokenType::If},
+            {"return", TokenType::Return}, {"true", TokenType::True},         {"while", TokenType::While},
+            {"int", TokenType::Int},       {"void", TokenType::Void},         {"float", TokenType::Float},
+            {"char", TokenType::Char},     {"bool", TokenType::Bool},         {"goto", TokenType::Goto},
             {"struct", TokenType::Struct},
         };
 
@@ -269,4 +252,4 @@ namespace compiler::lexer {
 
         return TokenType::Identifier;
     }
-}
+} // namespace compiler::lexer

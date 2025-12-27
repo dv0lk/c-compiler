@@ -13,11 +13,9 @@ namespace compiler::ir {
     public:
         Operand() = default;
 
-        Operand(constant_t constant)
-            : value_(constant) {}
+        Operand(constant_t constant): value_(constant) { }
 
-        Operand(variable_t variable)
-            : value_(std::move(variable)) {}
+        Operand(variable_t variable): value_(std::move(variable)) { }
 
         [[nodiscard]] constexpr bool is_constant() const {
             return std::holds_alternative<constant_t>(value_);
@@ -44,4 +42,4 @@ namespace compiler::ir {
 
         bool operator==(const Operand& source) const = default;
     };
-}
+} // namespace compiler::ir

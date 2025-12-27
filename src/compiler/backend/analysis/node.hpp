@@ -5,7 +5,7 @@
 #include "structure/basic_block.hpp"
 
 namespace compiler {
-    template<typename InstrType>
+    template <typename InstrType>
     struct Node {
         using bb_t = BasicBlock<InstrType>;
 
@@ -15,8 +15,7 @@ namespace compiler {
 
         Node() = default;
 
-        explicit Node(const bb_t &block) : block(std::make_shared<bb_t>(block)) {
-        }
+        explicit Node(const bb_t& block): block(std::make_shared<bb_t>(block)) { }
 
         void add_successor(const size_t id) {
             successors.insert(id);
@@ -50,4 +49,4 @@ namespace compiler {
             return block->instructions().empty();
         }
     };
-}
+} // namespace compiler

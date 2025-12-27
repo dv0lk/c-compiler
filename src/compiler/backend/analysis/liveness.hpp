@@ -24,21 +24,22 @@ namespace compiler {
         }
     };
 
-    template<typename InstrType>
+    template <typename InstrType>
     class LivenessAnalysis {
     public:
         using traits = InstructionTrait<InstrType>;
         using LiveSet = std::unordered_set<std::string>;
 
     private:
-        //block liveness
+        // block liveness
         std::unordered_map<size_t, LiveSet> block_live_in_;
         std::unordered_map<size_t, LiveSet> block_live_out_;
-        //instruction liveness
+        // instruction liveness
         std::unordered_map<InstrId, LiveSet, InstrIdHash> instr_live_in_;
         std::unordered_map<InstrId, LiveSet, InstrIdHash> instr_live_out_;
 
         const CFG<InstrType>* cfg_ = nullptr;
+
     public:
         void analyze(const std::vector<BasicBlock<InstrType>>& basic_blocks) {
             CFG<InstrType> cfg;
@@ -88,7 +89,8 @@ namespace compiler {
 
         [[nodiscard]] bool is_dead(size_t block_id, size_t instr_idx, const InstrType& instr) const {
             auto defs = traits::get_defs(instr);
-            if (defs.empty()) return false;
+            if (defs.empty())
+                return false;
 
             const auto& live_out = get_instr_live_out(block_id, instr_idx);
             for (const auto& def : defs) {
@@ -113,10 +115,10 @@ namespace compiler {
 
         [[nodiscard]] LiveSet get_all_live_variables() const {
             LiveSet all;
-            for (const auto &live_set: block_live_in_ | std::views::values) {
+            for (const auto& live_set : block_live_in_ | std::views::values) {
                 all.insert(live_set.begin(), live_set.end());
             }
-            for (const auto &live_set: block_live_out_ | std::views::values) {
+            for (const auto& live_set : block_live_out_ | std::views::values) {
                 all.insert(live_set.begin(), live_set.end());
             }
             return all;
@@ -141,10 +143,12 @@ namespace compiler {
                 changed = false;
 
                 for (size_t id : cfg.get_block_ids() | std::views::reverse) {
-                    if (id == START_NODE || id == EXIT_NODE) continue;
+                    if (id == START_NODE || id == EXIT_NODE)
+                        continue;
 
                     auto* node = cfg.find_node(id);
-                    if (!node || node->empty()) continue;
+                    if (!node || node->empty())
+                        continue;
 
                     LiveSet new_live_out;
                     for (const auto succ_id : node->successors) {
@@ -174,10 +178,12 @@ namespace compiler {
 
         void compute_instruction_liveness(const CFG<InstrType>& cfg) {
             for (size_t block_id : cfg.get_block_ids()) {
-                if (block_id == START_NODE || block_id == EXIT_NODE) continue;
+                if (block_id == START_NODE || block_id == EXIT_NODE)
+                    continue;
 
                 auto* node = cfg.find_node(block_id);
-                if (!node || node->empty()) continue;
+                if (!node || node->empty())
+                    continue;
 
                 const auto& instructions = node->block->instructions();
                 size_t num_instr = instructions.size();
@@ -203,4 +209,4 @@ namespace compiler {
             }
         }
     };
-}
+} // namespace compiler

@@ -1,22 +1,22 @@
 #pragma once
 #include <stdexcept>
 
-#include "utils.hpp"
 #include "transforms/transform.hpp"
+#include "utils.hpp"
 
 namespace compiler::transforms {
-    template<typename InstrType>
+    template <typename InstrType>
     class ConstantFolding : public Transform<InstrType> {
     public:
         ConstantFolding() = default;
 
         ~ConstantFolding() override = default;
 
-        bool run(std::vector<InstrType> &instructions) override {
+        bool run(std::vector<InstrType>& instructions) override {
             bool changed = false;
-            for (auto &instr: instructions) {
+            for (auto& instr : instructions) {
                 if (is_foldable(instr)) {
-                    auto folded = instr.visit([](auto &i) { return fold(i); });
+                    auto folded = instr.visit([](auto& i) { return fold(i); });
                     instr = std::move(folded);
                     changed = true;
                 }
@@ -26,8 +26,8 @@ namespace compiler::transforms {
         }
 
     private:
-        static bool is_foldable(const ir::Instruction &instr) {
-            //we only fold binary and unary
+        static bool is_foldable(const ir::Instruction& instr) {
+            // we only fold binary and unary
             if (!instr.holds<ir::Binary, ir::Unary>()) {
                 return false;
             }
@@ -43,7 +43,7 @@ namespace compiler::transforms {
             return false;
         }
 
-        static ir::Instruction fold(const ir::Binary &binary) {
+        static ir::Instruction fold(const ir::Binary& binary) {
             const int lhs = binary.left.get_constant();
             const int rhs = binary.right.get_constant();
             const int constant = utils::evaluate_binary(binary.op, lhs, rhs);
@@ -51,17 +51,17 @@ namespace compiler::transforms {
             return ir::Instruction{ir::Copy{binary.result, ir::Operand{constant}}};
         }
 
-        static ir::Instruction fold(const ir::Unary &binary) {
+        static ir::Instruction fold(const ir::Unary& binary) {
             const int value = binary.value.get_constant();
             const int constant = utils::evaluate_unary(value, binary.op);
 
             return ir::Instruction{ir::Copy{binary.result, ir::Operand{constant}}};
         }
 
-        template<typename T>
-        static ir::Instruction fold(const T &) {
-            //should be unreachable
+        template <typename T>
+        static ir::Instruction fold(const T&) {
+            // should be unreachable
             throw std::runtime_error("Unsupported instruction for constant folding");
         }
     };
-}
+} // namespace compiler::transforms
