@@ -20,11 +20,9 @@ public:
 
     void init(int argc, char* argv[]) {
         parser_.add_description("A simple C compiler");
-        parser_.add_epilog("Example: compiler input.c --ast --ir-before-opt");
+        parser_.add_epilog("Example: compiler input.c --ir --x86");
 
         parser_.add_argument("input").help("input source file (.c)").required();
-
-        parser_.add_argument("-o", "--output").help("output file path").default_value(std::string("output.asm"));
 
         parser_.add_argument("--ast").help("print the AST").flag();
 
@@ -36,6 +34,7 @@ public:
 
         parser_.add_argument("--x86-no-opt").help("print x86 assembly before optimizations").flag();
 
+        parser_.add_argument("-o", "--output").help("output file path").default_value(std::string("output.asm")).nargs(1);
 
         try {
             parser_.parse_args(argc, argv);
@@ -48,8 +47,6 @@ public:
         input_file_path = parser_.get<std::string>("input");
         validate_input_file();
 
-        output_file = parser_.get<std::string>("--output");
-
         print_ast = parser_.get<bool>("--ast");
 
         print_ir = parser_.get<bool>("--ir");
@@ -58,6 +55,7 @@ public:
         print_x86 = parser_.get<bool>("--x86");
         print_x86_no_opt = parser_.get<bool>("--x86-no-opt");
 
+        output_file = parser_.get<std::string>("--output");
     }
 
     [[nodiscard]] const std::string& get_output_file() const {
