@@ -5,7 +5,7 @@
 #include "backend/x86/codegen.hpp"
 #include "compiler/frontend/lexer/lexer.hpp"
 #include "compiler/frontend/parser/parser.hpp"
-#include "config/config.hpp"
+#include "util/config.hpp"
 #include "util/format/format.hpp"
 #include "x86/reg_alloc.hpp"
 #include <print>

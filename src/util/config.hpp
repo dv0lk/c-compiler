@@ -4,7 +4,7 @@
 #include <string>
 
 #include "argparse/argparse.hpp"
-#include "util/files.hpp"
+#include "files.hpp"
 
 class Config {
 public:

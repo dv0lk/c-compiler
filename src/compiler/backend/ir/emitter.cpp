@@ -42,10 +42,6 @@ namespace compiler::ir {
         current_function_.emplace_back(Return{ret_value});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::Expression& stmt) {
-        emit_expr(stmt.expr);
-    }
-
     void Emitter::emit_stmt(const ast::stmt::Block& block) {
         resolver_.begin_scope();
 

@@ -43,8 +43,6 @@ namespace compiler::ir {
 
         void emit_stmt(const ast::stmt::Return& ret);
 
-        void emit_stmt(const ast::stmt::Expression& stmt);
-
         void emit_stmt(const ast::stmt::Block& block);
 
         void emit_stmt(const ast::stmt::If& stmt);

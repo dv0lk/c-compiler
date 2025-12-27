@@ -48,7 +48,6 @@ set(compiler-lib_SOURCES
 	"compiler/frontend/lexer/token.hpp"
 	"compiler/frontend/parser/parser.cpp"
 	"compiler/frontend/parser/parser.hpp"
-	"compiler/util/files.hpp"
 	"compiler/util/format/format.hpp"
 	"compiler/util/format/ir.hpp"
 	"compiler/util/format/x86.hpp"
@@ -91,7 +90,7 @@ target_compile_features(compiler PRIVATE
 
 target_include_directories(compiler PRIVATE
 	"compiler/"
-	"config/"
+	"util/"
 )
 
 target_link_libraries(compiler PRIVATE

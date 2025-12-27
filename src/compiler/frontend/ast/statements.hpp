@@ -19,10 +19,6 @@ namespace compiler::ast::stmt {
         expr::expr_ptr value;
     };
 
-    struct Expression {
-        expr::expr_ptr expr;
-    };
-
     struct If {
         expr::expr_ptr condition;
         stmt_ptr then_branch;
@@ -63,7 +59,7 @@ namespace compiler::ast::stmt {
 
     class stmt {
     private:
-        using variant_t = std::variant<Return, Expression, If, While, FunctionParam, FunctionDecl, Block, Variable>;
+        using variant_t = std::variant<Return, If, While, FunctionParam, FunctionDecl, Block, Variable>;
         variant_t data_;
 
     public:
