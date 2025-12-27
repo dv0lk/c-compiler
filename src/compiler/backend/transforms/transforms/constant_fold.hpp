@@ -1,8 +1,8 @@
 #pragma once
 #include <stdexcept>
 
-#include "transforms/transform.hpp"
 #include "utils.hpp"
+#include "transforms/transform.hpp"
 
 namespace compiler::transforms {
     template<typename InstrType>

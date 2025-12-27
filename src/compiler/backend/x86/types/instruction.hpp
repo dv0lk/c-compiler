@@ -1,6 +1,6 @@
 #pragma once
-#include "operations.hpp"
 #include <type_traits>
+#include "operations.hpp"
 
 namespace compiler::x86 {
     class Instruction {
@@ -17,8 +17,7 @@ namespace compiler::x86 {
         explicit constexpr Instruction(T &&instruction) : data_(std::forward<T>(instruction)) {
         }
 
-        constexpr Instruction(const Instruction &other) : data_(other.data_) {
-        }
+        constexpr Instruction(const Instruction &other) = default;
 
         constexpr Instruction(Instruction &&other) noexcept : data_(std::move(other.data_)) {
         }

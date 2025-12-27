@@ -1,9 +1,9 @@
 #pragma once
-#include "argparse/argparse.hpp"
-#include <string>
-#include <stdexcept>
 #include <filesystem>
+#include <stdexcept>
+#include <string>
 
+#include "argparse/argparse.hpp"
 #include "util/files.hpp"
 
 class Config {
@@ -72,7 +72,7 @@ public:
         // output_file = parser_.get<std::string>("--output");
     }
 
-    const std::string& get_output_file() const {
+    [[nodiscard]] const std::string& get_output_file() const {
         return output_file;
     }
 

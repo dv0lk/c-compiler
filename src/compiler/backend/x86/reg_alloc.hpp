@@ -1,16 +1,14 @@
 #pragma once
 #include <algorithm>
 #include <array>
-#include <limits>
 #include <optional>
 #include <ranges>
-#include <set>
 #include <stack>
 #include <unordered_map>
 #include <vector>
 
-#include "analysis/liveness.hpp"
 #include "analysis/cfg.hpp"
+#include "analysis/liveness.hpp"
 #include "analysis/traits/x86.hpp"
 #include "structure/function.hpp"
 #include "types/types.hpp"
@@ -110,10 +108,8 @@ namespace compiler::x86 {
 
     class RegisterAllocator {
     public:
-        //rax,rsp and rbp are reserved
-        static constexpr std::array<RegType, 13> ALLOCATABLE_REGS = {
-            RegType::RBX, RegType::RCX, RegType::RDX, RegType::RSI, RegType::RDI, RegType::R8, RegType::R9,
-            RegType::R10, RegType::R11, RegType::R12, RegType::R13, RegType::R14, RegType::R15
+        static constexpr std::array ALLOCATABLE_REGS = {
+            RegType::RBX, RegType::RCX, RegType::RDX, RegType::RSI, RegType::RDI, RegType::R8, RegType::R9, RegType::R10, RegType::R11, RegType::R12, RegType::R13, RegType::R14, RegType::R15
         };
 
         static constexpr size_t K = ALLOCATABLE_REGS.size();
@@ -144,6 +140,7 @@ namespace compiler::x86 {
     private:
         void reset() {
             allocation_.clear();
+            used_callee_saved_.clear();
             curr_stack_offset_ = -8;
         }
 
@@ -193,6 +190,7 @@ namespace compiler::x86 {
 
                 if (reg.has_value()) {
                     allocation_[node] = reg.value();
+                    used_callee_saved_.insert(reg.value());
                 } else {
                     spilled_[node] = curr_stack_offset_;
                     curr_stack_offset_ -= 8;
@@ -258,44 +256,56 @@ namespace compiler::x86 {
             if (function.empty())
                 return;
 
-            auto& instrs = function.instructions();
+            std::vector<Instruction> new_instructions;
+            new_instructions.emplace_back(Push(Register(RegType::RBP)));
+            new_instructions.emplace_back(Mov(Register(RegType::RBP), Register(RegType::RSP)));
 
-            size_t insert_pos = 1;
-
-            auto push = Instruction(Push(Register(RegType::RBP)));
-            auto mov = Instruction(Mov(Register(RegType::RBP), Register(RegType::RSP)));
-            auto sub = Instruction(Sub(Register(RegType::RSP), Imm(curr_stack_offset_)));
-
-            if (curr_stack_offset_ + 8 < 0) {
-                instrs.insert(instrs.begin() + insert_pos, sub);
+            //push any registers we use to stack so we can restore them
+            for (const auto reg : used_callee_saved_) {
+                new_instructions.emplace_back(Push(Register(reg)));
             }
-            instrs.insert(instrs.begin() + insert_pos, mov);
-            instrs.insert(instrs.begin() + insert_pos, push);
+
+            //allocate stack space for any spilled variables
+            if (curr_stack_offset_ + 8 < 0) {
+                new_instructions.emplace_back(Sub(Register(RegType::RSP), Imm(-curr_stack_offset_ - 8)));
+            }
+
+            auto& old_instr = function.instructions();
+            for (auto& instr : old_instr) {
+                new_instructions.emplace_back(std::move(instr));
+            }
+
+            old_instr = std::move(new_instructions);
         }
 
         void add_epilogue(Function<Instruction>& function) {
-            auto& instrs = function.instructions();
+            auto& old_instr = function.instructions();
+            std::vector<Instruction> new_instructions;
 
-            std::vector<Instruction> new_instrs;
-            new_instrs.reserve(instrs.size() * 2);
-
-            for (auto& instr : instrs) {
+            for (auto& instr : old_instr) {
                 if (instr.holds<Ret>()) {
                     if (curr_stack_offset_ + 8 < 0) {
-                        new_instrs.emplace_back(Mov(Register(RegType::RSP), Register(RegType::RBP)));
+                        new_instructions.emplace_back(Add(Register(RegType::RSP), Imm(-curr_stack_offset_ - 8)));
                     }
-                    new_instrs.emplace_back(Pop(Register(RegType::RBP)));
+
+                    //pop from the stack in reverse
+                    for (auto reg : used_callee_saved_ | std::views::reverse) {
+                        new_instructions.emplace_back(Pop(Register(reg)));
+                    }
+
+                    new_instructions.emplace_back(Pop(Register(RegType::RBP)));
                 }
-                new_instrs.push_back(std::move(instr));
+                new_instructions.push_back(std::move(instr));
             }
 
-            instrs = std::move(new_instrs);
+            old_instr = std::move(new_instructions);
         }
 
 
 
         std::unordered_map<std::string, RegType> allocation_;
         std::unordered_map<std::string, int> spilled_;
+        std::set<RegType> used_callee_saved_;
         int curr_stack_offset_ = -8;
     };
 }

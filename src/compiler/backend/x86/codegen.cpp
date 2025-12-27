@@ -1,4 +1,5 @@
 #include <stdexcept>
+
 #include "codegen.hpp"
 
 compiler::Program<compiler::x86::Instruction> compiler::x86::emitter::emit(const Program<ir::Instruction> &ir_program) {
@@ -22,6 +23,16 @@ void compiler::x86::emitter::assemble_function(const Function<ir::Instruction> &
     current_function_ = Function<Instruction>(function.name());
 
     current_function_.emplace_back(Label(function.name()));
+    //TODO rework this stuff idk
+    const auto& params = function.params();
+    for (size_t i = 0; i < params.size(); ++i) {
+        if (i < ARG_REGISTERS.size()) {
+            current_function_.emplace_back(Mov(PseudoRegister(params[i]), Register(ARG_REGISTERS[i])));
+        } else {
+            int stack_offset = 16 + static_cast<int>((i - ARG_REGISTERS.size()) * 8);
+            current_function_.emplace_back(Mov(PseudoRegister(params[i]), Mem(stack_offset)));
+        }
+    }
 
     for (const auto &instr: function.instructions()) {
         instr.visit([this](const auto &i) { assemble(i); });
@@ -150,16 +161,14 @@ void compiler::x86::emitter::assemble(const ir::JumpIfNotZero &jump_if_not_zero)
 }
 
 void compiler::x86::emitter::assemble(const ir::FunctionCall &func_call) {
-    for (auto it = func_call.arguments.rbegin(); it != func_call.arguments.rend(); ++it) {
-        current_function_.emplace_back(Push{convert_virt_reg(*it)});
+    const auto& args = func_call.arguments;
+
+    //TODO currently we only support max 6 arguments
+    for (int i = 0; i < args.size(); i++) {
+        current_function_.emplace_back(Mov(Register(ARG_REGISTERS[i]), convert_virt_reg(args[i])));
     }
 
-    current_function_.emplace_back(Call{func_call.function_name});
-
-    if (!func_call.arguments.empty()) {
-        current_function_.emplace_back(
-            Add{Register(RegType::RSP), Imm{static_cast<int>(func_call.arguments.size() * 8)}});
-    }
+    current_function_.emplace_back(Call{LabelOp{func_call.function_name + "_entry"}});
 
     auto dest = convert_virt_reg(func_call.destination);
     current_function_.emplace_back(Mov(dest, Register(RegType::RAX)));

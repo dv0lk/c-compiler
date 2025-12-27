@@ -1,10 +1,17 @@
 #pragma once
-#include "types/instruction.hpp"
-#include "structure/program.hpp"
+#include <array>
+
 #include "ir/types/instruction.hpp"
 #include "ir/types/operand.hpp"
+#include "structure/program.hpp"
+#include "types/instruction.hpp"
 
 namespace compiler::x86 {
+    //calling convention register order
+    inline constexpr std::array ARG_REGISTERS = {
+        RegType::RDI, RegType::RSI, RegType::RDX, RegType::RCX, RegType::R8, RegType::R9
+    };
+
     class emitter {
     public:
         Program<Instruction> emit(const Program<ir::Instruction> &ir_program);

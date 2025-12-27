@@ -1,9 +1,9 @@
 #pragma once
-#include <variant>
 #include <type_traits>
+#include <variant>
 
-#include "regs.hpp"
 #include "operand.hpp"
+#include "regs.hpp"
 
 namespace compiler::x86 {
     struct Imm {

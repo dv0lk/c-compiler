@@ -53,7 +53,7 @@ namespace compiler::ir {
         resolver_.begin_scope();
 
         if (block.statements.empty()) {
-            throw std::runtime_error("Cannot emit empty statement block");
+            throw std::runtime_error("Empty statement block");
         }
 
         for (const auto &s: block.statements) {
@@ -101,21 +101,19 @@ namespace compiler::ir {
         current_function_.emplace_back(Label{end_label});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::function_param &stmt) {
-        throw std::runtime_error("Not implemented\n");
+    void Emitter::emit_stmt(const ast::stmt::function_param &param) {
+        const auto scope_id = resolver_.declare(param.name);
+        current_function_.add_param(make_variable_name(param.name, scope_id.value()));
     }
 
     void Emitter::emit_stmt(const ast::stmt::function_decl &func) {
+        start_new_function(func.function_name + "_entry");
         resolver_.begin_scope();
 
-        //TODO look here
-        std::vector<std::string> param_names;
-        for (const auto &[name, type]: func.params) {
-            resolver_.declare(name);
-            param_names.push_back(name);
+        for (const auto &param : func.params) {
+            emit_stmt(param);
         }
 
-        start_new_function(func.function_name + "_entry");
         emit_stmt(func.body);
         finalize_current_function();
 
@@ -159,7 +157,7 @@ namespace compiler::ir {
     [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::binary &expr) {
         auto left = emit_expr(expr.left);
         auto right = emit_expr(expr.right);
-        auto result= Operand{make_tmp_var()};
+        auto result = Operand{make_tmp_var()};
 
         current_function_.emplace_back(Binary{expr.op, left, right, result});
         return result;

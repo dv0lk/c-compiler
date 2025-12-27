@@ -1,7 +1,7 @@
 #pragma once
+#include <span>
 #include <string>
 #include <vector>
-#include <span>
 
 namespace compiler {
     template<typename InstrType>

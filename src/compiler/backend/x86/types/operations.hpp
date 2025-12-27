@@ -1,8 +1,8 @@
 #pragma once
 #include <utility>
 
-#include "operand.hpp"
 #include "condition_code.hpp"
+#include "operand.hpp"
 
 namespace compiler::x86 {
     struct Mov {

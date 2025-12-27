@@ -1,10 +1,10 @@
 #pragma once
-#include <unordered_set>
 #include <algorithm>
-#include "transforms/transform.hpp"
-#include "analysis/liveness.hpp"
+#include <unordered_set>
 #include "analysis/cfg.hpp"
+#include "analysis/liveness.hpp"
 #include "analysis/traits/traits.hpp"
+#include "transforms/transform.hpp"
 
 namespace compiler::transforms {
     template<typename InstrType>
@@ -29,7 +29,7 @@ namespace compiler::transforms {
                 auto liveness = LivenessAnalysis<InstrType>::get_analysis(cfg);
 
                 std::vector<size_t> block_ids;
-                for (size_t id : cfg.get_block_ids()) {
+                for (size_t id: cfg.get_block_ids()) {
                     if (id != START_NODE && id != EXIT_NODE) {
                         block_ids.push_back(id);
                     }
@@ -38,12 +38,12 @@ namespace compiler::transforms {
 
                 std::unordered_set<size_t> dead_indices;
                 size_t global_index = 0;
-                for (size_t block_id : block_ids) {
-                    auto* node = cfg.find_node(block_id);
+                for (size_t block_id: block_ids) {
+                    auto *node = cfg.find_node(block_id);
                     if (!node || node->empty()) continue;
 
                     size_t instr_index = 0;
-                    for (const auto &instr : node->block->instructions()) {
+                    for (const auto &instr: node->block->instructions()) {
                         if (is_dead_instruction(instr, liveness, block_id, instr_index)) {
                             dead_indices.insert(global_index);
                             changed = true;
@@ -72,13 +72,11 @@ namespace compiler::transforms {
         }
 
     private:
-        static bool is_dead_instruction(const InstrType& instr,
-                                        const LivenessAnalysis<InstrType>& liveness,
+        static bool is_dead_instruction(const InstrType &instr,
+                                        const LivenessAnalysis<InstrType> &liveness,
                                         size_t block_id,
                                         size_t instr_index) {
-            if (traits::is_terminator(instr) ||
-                traits::is_label(instr) ||
-                traits::has_side_effects(instr)) {
+            if (traits::is_terminator(instr) || traits::is_label(instr) || traits::has_side_effects(instr)) {
                 return false;
             }
 
@@ -87,8 +85,8 @@ namespace compiler::transforms {
                 return false;
             }
 
-            const auto& live_out = liveness.get_instr_live_out(block_id, instr_index);
-            for (const auto& def : defs) {
+            const auto &live_out = liveness.get_instr_live_out(block_id, instr_index);
+            for (const auto &def: defs) {
                 if (live_out.contains(def)) {
                     return false;
                 }

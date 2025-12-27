@@ -5,6 +5,7 @@
 #include "backend/transforms/manager.hpp"
 #include "backend/transforms/transforms/constant_fold.hpp" //TODO should either create a single header for all transforms, or do somethign different
 #include "backend/transforms/transforms/copy_propagation.hpp"
+#include "backend/transforms/transforms/dead_code_elem.hpp"
 #include "backend/x86/codegen.hpp"
 #include "backend/analysis/cfg.hpp"
 #include "config/config.hpp"
@@ -19,14 +20,13 @@ namespace compiler {
 
         TransformManager<ir::Instruction> tm;
         tm.register_transform<transforms::ConstantFolding<ir::Instruction>>();
-        tm.register_transform<transforms::CopyPropagation<ir::Instruction>>();
+        tm.register_transform<transforms::DeadCodeElim<ir::Instruction>>();
         tm.run_on_program(ir);
         std::println("{}", ir);
 
 
         auto x86 = x86::emitter::get_x86(ir);
-        std::println("{}", x86);
-
+        // std::println("{}", x86);
         x86::RegisterAllocator allocator;
         allocator.run_on_program(x86);
         std::println("{}", x86);

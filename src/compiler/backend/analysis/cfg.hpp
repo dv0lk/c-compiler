@@ -1,15 +1,15 @@
 #pragma once
 
-#include <vector>
+#include <algorithm>
 #include <ranges>
+#include <span>
 #include <stdexcept>
 #include <unordered_set>
-#include <algorithm>
-#include <span>
+#include <vector>
 
 #include "node.hpp"
-#include "traits/traits.hpp"
 #include "structure/basic_block.hpp"
+#include "traits/traits.hpp"
 
 namespace compiler {
     static constexpr size_t START_NODE = 0;
@@ -29,7 +29,7 @@ namespace compiler {
         std::string name_;
         std::unordered_map<size_t, node_t> nodes_;
         std::unordered_map<std::string, size_t> label_cache_;
-        size_t next_node_id_ = 1;  // Start at 1 to avoid conflict with START_NODE (0)
+        size_t next_node_id_ = 1;
 
     public:
         CFG() = default;

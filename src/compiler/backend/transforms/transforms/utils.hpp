@@ -1,7 +1,7 @@
 #pragma once
 #include <stdexcept>
 
-#include "../../../frontend/lexer/token.hpp"
+#include "frontend/lexer/token.hpp"
 
 namespace compiler::transforms::utils {
     static int evaluate_binary(const TokenType op, const int left, const int right) {

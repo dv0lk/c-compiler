@@ -2,10 +2,10 @@
 #include <print>
 #include <vector>
 
+#include "frontend/ast/ast.hpp"
+#include "misc/resolver.hpp"
 #include "structure/program.hpp"
 #include "types/instruction.hpp"
-#include "misc/resolver.hpp"
-#include "frontend/ast/ast.hpp"
 
 namespace compiler::ir {
     class Emitter {
@@ -51,7 +51,7 @@ namespace compiler::ir {
 
         void emit_stmt(const ast::stmt::while_ &stmt);
 
-        void emit_stmt(const ast::stmt::function_param &stmt);
+        void emit_stmt(const ast::stmt::function_param &param);
 
         void emit_stmt(const ast::stmt::function_decl &func);
 

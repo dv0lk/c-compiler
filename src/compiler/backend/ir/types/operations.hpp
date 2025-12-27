@@ -1,6 +1,6 @@
 #pragma once
-#include "ir/types/operand.hpp"
 #include "frontend/lexer/token.hpp"
+#include "ir/types/operand.hpp"
 
 namespace compiler::ir {
 

@@ -1,9 +1,9 @@
 #pragma once
 #include <vector>
 
-#include "transforms/transform.hpp"
-#include "ir/ir.hpp"
 #include "analysis/traits/traits.hpp"
+#include "ir/ir.hpp"
+#include "transforms/transform.hpp"
 
 namespace compiler::transforms {
     template<typename InstrType>
@@ -17,8 +17,7 @@ namespace compiler::transforms {
             copy_map_.clear();
             bool changed = false;
 
-            for (auto &instr : instructions) {
-                // Reset map at labels (conservative for control flow)
+            for (auto &instr: instructions) {
                 if (InstructionTrait<InstrType>::is_label(instr)) {
                     copy_map_.clear();
                     continue;
@@ -99,7 +98,9 @@ namespace compiler::transforms {
             const auto new_right = replace_operand(right);
 
             if (new_left.has_value() || new_right.has_value()) {
-                return ir::Instruction{ir::Binary{binary.op, new_left.value_or(left), new_right.value_or(right), binary.result}};
+                return ir::Instruction{
+                    ir::Binary{binary.op, new_left.value_or(left), new_right.value_or(right), binary.result}
+                };
             }
 
             return std::nullopt;
@@ -131,7 +132,7 @@ namespace compiler::transforms {
         }
 
         template<typename T>
-        std::optional<ir::Instruction> propagate(const T&) {
+        std::optional<ir::Instruction> propagate(const T &) {
             return std::nullopt;
         }
     };
