@@ -10,7 +10,7 @@ class Config {
 public:
     std::string input_file;
 
-    bool print_ast = false;
+    // bool print_ast = false;
 
     bool print_ir_no_opt = false;
     bool print_ir = false;
@@ -24,7 +24,7 @@ public:
 
         parser_.add_argument("input").help("input source file (.c)").required();
 
-        parser_.add_argument("--ast").help("print the AST").flag();
+        // parser_.add_argument("--ast").help("print the AST").flag();
 
         parser_.add_argument("--ir").help("print IR after optimizations").flag();
 
@@ -47,7 +47,7 @@ public:
         input_file_path = parser_.get<std::string>("input");
         validate_input_file();
 
-        print_ast = parser_.get<bool>("--ast");
+        // print_ast = parser_.get<bool>("--ast");
 
         print_ir = parser_.get<bool>("--ir");
         print_ir_no_opt = parser_.get<bool>("--ir-no-opt");

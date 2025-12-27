@@ -14,11 +14,6 @@ namespace compiler {
     void startup(const Config& config) {
         auto tokens = lexer::Tokenizer::get_tokens(config.input_file);
         auto ast = ast::Parser::get_ast(tokens);
-
-        if (config.print_ast) {
-            std::println("TODO PRINT AST");
-        }
-
         auto ir = ir::Emitter::get_ir(ast);
 
         if (config.print_ir_no_opt) {
