@@ -7,7 +7,7 @@ cmake --build build config Release
 ```
 ## Usage
 ```commandline
-Usage: compiler [--help] [--ast] [--ir] [--ir-no-opt] [--x86] [--x86-no-opt] [--output VAR] input
+Usage: compiler [--help] [--ir] [--ir-no-opt] [--x86] [--x86-no-opt] [--output VAR] input
 
 A simple C compiler
 
@@ -16,7 +16,6 @@ Positional arguments:
 
 Optional arguments:
   -h, --help    shows help message and exits
-  --ast         print the AST
   --ir          print IR after optimizations
   --ir-no-opt   print IR before optimizations
   --x86         print x86 assembly after optimizations
