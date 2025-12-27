@@ -12,7 +12,6 @@ namespace compiler::ir {
         variant_t data_;
 
     public:
-        //TODO add good constructors
         explicit Instruction(variant_t &&variant) : data_(std::move(variant)) {
         }
 

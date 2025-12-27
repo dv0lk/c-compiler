@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 namespace compiler::lexer {
-    std::vector<Token> tokenizer::parse_tokens(const std::string& source) {
+    std::vector<Token> Tokenizer::parse_tokens(const std::string& source) {
         this->source = source;
 
         while (!is_end()) {
@@ -14,7 +14,7 @@ namespace compiler::lexer {
         return this->tokens;
     }
 
-    void tokenizer::print_tokens() const {
+    void Tokenizer::print_tokens() const {
         if (this->tokens.empty()) {
             std::cout << "No tokens to print\n";
             return;
@@ -27,7 +27,7 @@ namespace compiler::lexer {
         }
     }
 
-    void tokenizer::lex() {
+    void Tokenizer::lex() {
         const char c = peek();
         advance();
 
@@ -114,26 +114,26 @@ namespace compiler::lexer {
         }
     }
 
-    bool tokenizer::is_end() const {
+    bool Tokenizer::is_end() const {
         return current_position >= source.size();
     }
 
-    bool tokenizer::is_alpha(const char c) {
+    bool Tokenizer::is_alpha(const char c) {
         return std::isalpha(c) || c == '_';
     }
 
-    char tokenizer::peek() const {
+    char Tokenizer::peek() const {
         return source[current_position];
     }
 
-    char tokenizer::peek_next() const {
+    char Tokenizer::peek_next() const {
         if (is_end()) {
             return '\0';
         }
         return source[current_position + 1];
     }
 
-    bool tokenizer::match_next(const char c) {
+    bool Tokenizer::match_next(const char c) {
         const bool match = peek() == c;
         if (match) {
             advance();
@@ -141,26 +141,21 @@ namespace compiler::lexer {
         return match;
     }
 
-    void tokenizer::advance() {
+    void Tokenizer::advance() {
         current_position++;
     }
 
-    std::string tokenizer::get_lexeme() const {
+    std::string Tokenizer::get_lexeme() const {
         return source.substr(start_position, current_position - start_position);
     }
 
-    void tokenizer::add_token(TokenType type, std::optional<int> literal) {
+    void Tokenizer::add_token(TokenType type, std::optional<int> literal) {
         tokens.emplace_back(type, get_lexeme(), literal);
     }
 
 
-    //todo handle stirng literals
-    void tokenizer::consume_string() {
+    void Tokenizer::consume_string() {
         while (peek() != '"' && !is_end()) {
-            //todo maybe think about adding line support
-            // if (peek() == '\n') {
-            //     line++;
-            // }
             advance();
         }
 
@@ -168,14 +163,13 @@ namespace compiler::lexer {
             throw std::runtime_error("Unterminated string\n");
         }
 
-        //todo huh, something is off here, works for now
         const std::string lexeme = source.substr(start_position, current_position - start_position);
 
         add_token(TokenType::StringLiteral);
     }
 
     //todo handle double/float values
-    void tokenizer::consume_digit() {
+    void Tokenizer::consume_digit() {
         bool is_decimal = false;
 
         while (isdigit(peek())) {
@@ -204,7 +198,7 @@ namespace compiler::lexer {
         add_token(TokenType::IntLiteral, value);
     }
 
-    void tokenizer::consume_identifier() {
+    void Tokenizer::consume_identifier() {
         while (is_alpha(peek()) || isdigit(peek())) {
             advance();
         }
@@ -220,13 +214,13 @@ namespace compiler::lexer {
         add_token(type);
     }
 
-    void tokenizer::skip_line() {
+    void Tokenizer::skip_line() {
         while (peek() != '\n' && !is_end()) {
             advance();
         }
     }
 
-    void tokenizer::skip_multiline_comment() {
+    void Tokenizer::skip_multiline_comment() {
         while (!is_end()) {
             if (peek() == '*' && peek_next() == '/') {
                 advance();
@@ -240,7 +234,7 @@ namespace compiler::lexer {
         }
     }
 
-    TokenType tokenizer::keyword_or_identifier(const std::string& str) {
+    TokenType Tokenizer::keyword_or_identifier(const std::string& str) {
         static const std::unordered_map<std::string_view, TokenType> keywords = {
             {"break", TokenType::Break},
             {"continue", TokenType::Continue},

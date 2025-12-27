@@ -2,7 +2,7 @@
 
 #include "codegen.hpp"
 
-compiler::Program<compiler::x86::Instruction> compiler::x86::emitter::emit(const Program<ir::Instruction> &ir_program) {
+compiler::Program<compiler::x86::Instruction> compiler::x86::Emitter::emit(const Program<ir::Instruction> &ir_program) {
     for (const auto &function: ir_program.functions()) {
         assemble_function(function);
     }
@@ -11,7 +11,7 @@ compiler::Program<compiler::x86::Instruction> compiler::x86::emitter::emit(const
 }
 
 
-compiler::x86::Operand compiler::x86::emitter::convert_virt_reg(const ir::Operand &virtual_reg) {
+compiler::x86::Operand compiler::x86::Emitter::convert_virt_reg(const ir::Operand &virtual_reg) {
     if (virtual_reg.is_constant()) {
         return Imm(virtual_reg.get_constant());
     }
@@ -19,11 +19,10 @@ compiler::x86::Operand compiler::x86::emitter::convert_virt_reg(const ir::Operan
     return PseudoRegister(virtual_reg.get_variable());
 }
 
-void compiler::x86::emitter::assemble_function(const Function<ir::Instruction> &function) {
+void compiler::x86::Emitter::assemble_function(const Function<ir::Instruction> &function) {
     current_function_ = Function<Instruction>(function.name());
 
     current_function_.emplace_back(Label(function.name()));
-    //TODO rework this stuff idk
     const auto& params = function.params();
     for (size_t i = 0; i < params.size(); ++i) {
         if (i < ARG_REGISTERS.size()) {
@@ -42,13 +41,13 @@ void compiler::x86::emitter::assemble_function(const Function<ir::Instruction> &
     current_function_ = {};
 }
 
-void compiler::x86::emitter::assemble(const ir::Return &ret) {
+void compiler::x86::Emitter::assemble(const ir::Return &ret) {
     auto ret_value = convert_virt_reg(ret.value);
     current_function_.emplace_back(Mov(Register(RegType::RAX), ret_value));
     current_function_.emplace_back(Ret{});
 }
 
-void compiler::x86::emitter::assemble(const ir::Binary &binary) {
+void compiler::x86::Emitter::assemble(const ir::Binary &binary) {
     auto result = convert_virt_reg(binary.result);
     auto left = convert_virt_reg(binary.left);
     auto right = convert_virt_reg(binary.right);
@@ -69,7 +68,7 @@ void compiler::x86::emitter::assemble(const ir::Binary &binary) {
             break;
         case Slash:
             current_function_.emplace_back(Mov(Register(RegType::RAX), left));
-            current_function_.emplace_back(cdq());
+            current_function_.emplace_back(Cdq());
             current_function_.emplace_back(Idiv(right));
             current_function_.emplace_back(Mov(result, Register(RegType::RAX)));
             break;
@@ -107,7 +106,7 @@ void compiler::x86::emitter::assemble(const ir::Binary &binary) {
     }
 }
 
-void compiler::x86::emitter::assemble(const ir::Unary &unary) {
+void compiler::x86::Emitter::assemble(const ir::Unary &unary) {
     auto result = convert_virt_reg(unary.result);
     auto value = convert_virt_reg(unary.value);
 
@@ -129,7 +128,7 @@ void compiler::x86::emitter::assemble(const ir::Unary &unary) {
     }
 }
 
-void compiler::x86::emitter::assemble(const ir::Copy &copy) {
+void compiler::x86::Emitter::assemble(const ir::Copy &copy) {
     auto dest = convert_virt_reg(copy.destination);
     auto source = convert_virt_reg(copy.source);
 
@@ -140,27 +139,27 @@ void compiler::x86::emitter::assemble(const ir::Copy &copy) {
     current_function_.emplace_back(Mov(dest, source));
 }
 
-void compiler::x86::emitter::assemble(const ir::Label &label) {
+void compiler::x86::Emitter::assemble(const ir::Label &label) {
     current_function_.emplace_back(Label{label.name});
 }
 
-void compiler::x86::emitter::assemble(const ir::Jump &jump) {
+void compiler::x86::Emitter::assemble(const ir::Jump &jump) {
     current_function_.emplace_back(Jmp{jump.target.name});
 }
 
-void compiler::x86::emitter::assemble(const ir::JumpIfZero &jump_if_zero) {
+void compiler::x86::Emitter::assemble(const ir::JumpIfZero &jump_if_zero) {
     auto condition = convert_virt_reg(jump_if_zero.condition);
     current_function_.emplace_back(Cmp{condition, Imm{0}});
     current_function_.emplace_back(JmpCC{CC::Equal, jump_if_zero.target_label.name});
 }
 
-void compiler::x86::emitter::assemble(const ir::JumpIfNotZero &jump_if_not_zero) {
+void compiler::x86::Emitter::assemble(const ir::JumpIfNotZero &jump_if_not_zero) {
     auto condition = convert_virt_reg(jump_if_not_zero.condition);
     current_function_.emplace_back(Cmp{condition, Imm{0}});
     current_function_.emplace_back(JmpCC{CC::NotEqual, jump_if_not_zero.target_label.name});
 }
 
-void compiler::x86::emitter::assemble(const ir::FunctionCall &func_call) {
+void compiler::x86::Emitter::assemble(const ir::FunctionCall &func_call) {
     const auto& args = func_call.arguments;
 
     //TODO currently we only support max 6 arguments

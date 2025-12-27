@@ -8,7 +8,7 @@
 class Resolver {
 public:
     int count = 0;
-    std::vector<std::unordered_map<std::string, int> > scopes;
+    std::vector<std::unordered_map<std::string, int>> scopes;
 
     Resolver() {
         begin_scope();

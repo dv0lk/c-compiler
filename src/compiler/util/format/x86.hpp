@@ -191,10 +191,10 @@ struct std::formatter<compiler::x86::Imul> {
 };
 
 template<>
-struct std::formatter<compiler::x86::cdq> {
+struct std::formatter<compiler::x86::Cdq> {
     constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-    auto format(const compiler::x86::cdq&, std::format_context& ctx) const {
+    auto format(const compiler::x86::Cdq&, std::format_context& ctx) const {
         return std::format_to(ctx.out(), "cqo");
     }
 };

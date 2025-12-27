@@ -14,41 +14,41 @@ namespace compiler::ast::expr {
         return std::make_shared<expr>(T{std::forward<Args>(args)...});
     }
 
-    struct literal {
+    struct Literal {
         int value;
     };
 
-    struct binary {
+    struct Binary {
         expr_ptr left;
         TokenType op;
         expr_ptr right;
     };
 
-    struct unary {
+    struct Unary {
         TokenType op;
         expr_ptr value;
     };
 
-    struct logical {
+    struct Logical {
         expr_ptr left;
         TokenType op;
         expr_ptr right;
     };
 
-    struct grouping {
+    struct Grouping {
         expr_ptr expr;
     };
 
-    struct assignment {
+    struct Assignment {
         std::string name;
         expr_ptr value;
     };
 
-    struct variable {
+    struct Variable {
         std::string name;
     };
 
-    struct call {
+    struct Call {
         std::string identifier;
         std::vector<expr_ptr> arguments;
     };
@@ -56,8 +56,8 @@ namespace compiler::ast::expr {
 
     class expr {
     private:
-        using variant_t = std::variant<literal, binary, grouping, unary, logical, variable
-            , assignment, call>;
+        using variant_t = std::variant<Literal, Binary, Grouping, Unary, Logical, Variable
+            , Assignment, Call>;
         variant_t data_;
 
     public:

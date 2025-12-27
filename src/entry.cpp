@@ -3,7 +3,7 @@
 #include "backend/ir/emitter.hpp"
 #include <print>
 #include "backend/transforms/manager.hpp"
-#include "backend/transforms/transforms/constant_fold.hpp" //TODO should either create a single header for all transforms, or do somethign different
+#include "backend/transforms/transforms/constant_fold.hpp" // TODO: Consider creating a single header for all transforms
 #include "backend/transforms/transforms/copy_propagation.hpp"
 #include "backend/transforms/transforms/dead_code_elem.hpp"
 #include "backend/x86/codegen.hpp"
@@ -14,7 +14,7 @@
 
 namespace compiler {
     void startup(const Config& config) {
-        auto tokens = lexer::tokenizer::get_tokens(config.input_file);
+        auto tokens = lexer::Tokenizer::get_tokens(config.input_file);
         auto ast = ast::Parser::get_ast(tokens);
         auto ir = ir::Emitter::get_ir(ast);
 
@@ -25,7 +25,7 @@ namespace compiler {
         std::println("{}", ir);
 
 
-        auto x86 = x86::emitter::get_x86(ir);
+        auto x86 = x86::Emitter::get_x86(ir);
         // std::println("{}", x86);
         x86::RegisterAllocator allocator;
         allocator.run_on_program(x86);

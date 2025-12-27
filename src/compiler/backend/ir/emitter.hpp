@@ -41,38 +41,38 @@ namespace compiler::ir {
 
         void emit_stmt(const ast::stmt::stmt_ptr &stmt_var);
 
-        void emit_stmt(const ast::stmt::return_ &ret);
+        void emit_stmt(const ast::stmt::Return &ret);
 
-        void emit_stmt(const ast::stmt::expression &stmt);
+        void emit_stmt(const ast::stmt::Expression &stmt);
 
-        void emit_stmt(const ast::stmt::block &block);
+        void emit_stmt(const ast::stmt::Block &block);
 
-        void emit_stmt(const ast::stmt::if_ &stmt);
+        void emit_stmt(const ast::stmt::If &stmt);
 
-        void emit_stmt(const ast::stmt::while_ &stmt);
+        void emit_stmt(const ast::stmt::While &stmt);
 
-        void emit_stmt(const ast::stmt::function_param &param);
+        void emit_stmt(const ast::stmt::FunctionParam &param);
 
-        void emit_stmt(const ast::stmt::function_decl &func);
+        void emit_stmt(const ast::stmt::FunctionDecl &func);
 
-        void emit_stmt(const ast::stmt::variable &variable);
+        void emit_stmt(const ast::stmt::Variable &variable);
 
         Operand emit_expr(const ast::expr::expr_ptr &expr_var);
 
-        Operand emit_expr(const ast::expr::literal &literal);
+        Operand emit_expr(const ast::expr::Literal &literal);
 
-        Operand emit_expr(const ast::expr::variable &variable);
+        Operand emit_expr(const ast::expr::Variable &variable);
 
-        Operand emit_expr(const ast::expr::binary &expr);
+        Operand emit_expr(const ast::expr::Binary &expr);
 
-        Operand emit_expr(const ast::expr::unary &expr);
+        Operand emit_expr(const ast::expr::Unary &expr);
 
-        Operand emit_expr(const ast::expr::grouping &expr);
+        Operand emit_expr(const ast::expr::Grouping &expr);
 
-        Operand emit_expr(const ast::expr::assignment &expr);
+        Operand emit_expr(const ast::expr::Assignment &expr);
 
-        Operand emit_expr(const ast::expr::logical &expr);
+        Operand emit_expr(const ast::expr::Logical &expr);
 
-        Operand emit_expr(const ast::expr::call &expr);
+        Operand emit_expr(const ast::expr::Call &expr);
     };
 }

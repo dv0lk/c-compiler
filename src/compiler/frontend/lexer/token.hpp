@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <utility>
 
-//TODO refactor this
 namespace compiler {
     enum class TokenType {
         LeftParen,

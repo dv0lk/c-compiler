@@ -49,7 +49,7 @@ namespace compiler {
         void analyze(const CFG<InstrType>& cfg) {
             cfg_ = &cfg;
             clear();
-            computer_block_liveness(cfg);
+            compute_block_liveness(cfg);
             compute_instruction_liveness(cfg);
         }
 
@@ -135,7 +135,7 @@ namespace compiler {
         }
 
     private:
-        void computer_block_liveness(const CFG<InstrType>& cfg) {
+        void compute_block_liveness(const CFG<InstrType>& cfg) {
             bool changed = true;
             while (changed) {
                 changed = false;

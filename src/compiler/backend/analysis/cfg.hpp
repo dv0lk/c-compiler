@@ -25,7 +25,6 @@ namespace compiler {
 
 
     private:
-        //TODO should probably do something better
         std::string name_;
         std::unordered_map<size_t, node_t> nodes_;
         std::unordered_map<std::string, size_t> label_cache_;

@@ -5,12 +5,12 @@
 #include "token.hpp"
 
 namespace compiler::lexer {
-    class tokenizer {
+    class Tokenizer {
     public:
         [[nodiscard]] std::vector<Token> parse_tokens(const std::string& source);
 
         [[nodiscard]] static std::vector<Token> get_tokens(const std::string& source) {
-            tokenizer t;
+            Tokenizer t;
             return t.parse_tokens(source);
         }
 

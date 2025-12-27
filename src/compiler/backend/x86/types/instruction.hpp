@@ -5,14 +5,14 @@
 namespace compiler::x86 {
     class Instruction {
     private:
-        using variant_t = std::variant<std::monostate, Mov, Add, Sub, Imul, Idiv, Push, Pop, Ret, Label, Jmp, JmpCC, Cmp, Neg, Not, cdq, SetCC, Call>;
+        using variant_t = std::variant<Mov, Add, Sub, Imul, Idiv, Push, Pop, Ret, Label, Jmp, JmpCC, Cmp, Neg, Not, Cdq, SetCC, Call>;
         variant_t data_;
 
     public:
-        Instruction() : data_(std::monostate{}) {}
+        Instruction() = default;
+
 
         template<typename T>
-        //TODO check why do we need this
         requires (!std::is_same_v<std::decay_t<T>, Instruction> && std::is_constructible_v<variant_t, T&&>)
         explicit constexpr Instruction(T &&instruction) : data_(std::forward<T>(instruction)) {
         }

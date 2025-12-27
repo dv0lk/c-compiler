@@ -77,8 +77,8 @@ namespace compiler::x86 {
         }
     };
 
-    struct cdq {
-        cdq() = default;
+    struct Cdq {
+        Cdq() = default;
     };
 
     struct Idiv {

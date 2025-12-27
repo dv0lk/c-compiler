@@ -16,56 +16,56 @@ namespace compiler::ast::stmt {
         return std::make_shared<stmt>(T{std::forward<Args>(args)...});
     }
 
-    struct return_ {
+    struct Return {
         expr::expr_ptr value;
     };
 
-    struct expression {
+    struct Expression {
         expr::expr_ptr expr;
     };
 
-    struct if_ {
+    struct If {
         expr::expr_ptr condition;
         stmt_ptr then_branch;
         std::optional<stmt_ptr> else_branch;
     };
 
-    struct while_ {
+    struct While {
         expr::expr_ptr condition;
         stmt_ptr body;
     };
 
-    struct function_param {
+    struct FunctionParam {
         std::string name;
         TokenType type;
     };
 
-    struct function_decl {
+    struct FunctionDecl {
         TokenType return_type;
         std::string function_name;
-        std::vector<function_param> params;
+        std::vector<FunctionParam> params;
         stmt_ptr body;
     };
 
-    struct block {
+    struct Block {
         std::vector<stmt_ptr> statements;
     };
 
-    struct variable {
+    struct Variable {
         std::string name;
         std::optional<expr::expr_ptr> initializer;
     };
 
-    struct for_loop {
-        variable variable;
+    struct ForLoop {
+        Variable variable;
         expr::expr_ptr condition;
         stmt_ptr body;
     };
 
     class stmt {
     private:
-        using variant_t = std::variant<return_, expression, if_, while_, function_param,
-            function_decl, block, variable>;
+        using variant_t = std::variant<Return, Expression, If, While, FunctionParam,
+            FunctionDecl, Block, Variable>;
         variant_t data_;
 
     public:

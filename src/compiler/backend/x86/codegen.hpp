@@ -12,12 +12,12 @@ namespace compiler::x86 {
         RegType::RDI, RegType::RSI, RegType::RDX, RegType::RCX, RegType::R8, RegType::R9
     };
 
-    class emitter {
+    class Emitter {
     public:
         Program<Instruction> emit(const Program<ir::Instruction> &ir_program);
 
         [[nodiscard]] static Program<Instruction> get_x86(const Program<ir::Instruction> &ir_program) {
-            emitter assembler;
+            Emitter assembler;
             return assembler.emit(ir_program);
         }
 

@@ -39,17 +39,16 @@ namespace compiler::ir {
         });
     }
 
-    void Emitter::emit_stmt(const ast::stmt::return_ &ret) {
+    void Emitter::emit_stmt(const ast::stmt::Return &ret) {
         const auto ret_value = emit_expr(ret.value);
         current_function_.emplace_back(Return{ret_value});
     }
 
-    //TODO uhh is this a bug?
-    void Emitter::emit_stmt(const ast::stmt::expression &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::Expression &stmt) {
         emit_expr(stmt.expr);
     }
 
-    void Emitter::emit_stmt(const ast::stmt::block &block) {
+    void Emitter::emit_stmt(const ast::stmt::Block &block) {
         resolver_.begin_scope();
 
         if (block.statements.empty()) {
@@ -63,7 +62,7 @@ namespace compiler::ir {
         resolver_.end_scope();
     }
 
-    void Emitter::emit_stmt(const ast::stmt::if_ &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::If &stmt) {
         const std::string then_label = make_label("if_then");
         const std::string end_label = make_label("if_end");
         const std::string else_label = stmt.else_branch.has_value() ? make_label("if_else") : end_label;
@@ -82,7 +81,7 @@ namespace compiler::ir {
         current_function_.emplace_back(Label{end_label});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::while_ &stmt) {
+    void Emitter::emit_stmt(const ast::stmt::While &stmt) {
         const std::string cond_label = make_label("while_cond");
         const std::string body_label = make_label("while_body");
         const std::string end_label = make_label("while_end");
@@ -101,12 +100,12 @@ namespace compiler::ir {
         current_function_.emplace_back(Label{end_label});
     }
 
-    void Emitter::emit_stmt(const ast::stmt::function_param &param) {
+    void Emitter::emit_stmt(const ast::stmt::FunctionParam &param) {
         const auto scope_id = resolver_.declare(param.name);
         current_function_.add_param(make_variable_name(param.name, scope_id.value()));
     }
 
-    void Emitter::emit_stmt(const ast::stmt::function_decl &func) {
+    void Emitter::emit_stmt(const ast::stmt::FunctionDecl &func) {
         start_new_function(func.function_name + "_entry");
         resolver_.begin_scope();
 
@@ -120,7 +119,7 @@ namespace compiler::ir {
         resolver_.end_scope();
     }
 
-    void Emitter::emit_stmt(const ast::stmt::variable &variable) {
+    void Emitter::emit_stmt(const ast::stmt::Variable &variable) {
         const auto scope_id = resolver_.declare(variable.name);
 
         if (variable.initializer.has_value()) {
@@ -140,11 +139,11 @@ namespace compiler::ir {
         });
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::literal &literal) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Literal &literal) {
         return literal.value;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::variable &variable) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Variable &variable) {
         const auto resolved = resolver_.resolve(variable.name);
 
         if (!resolved.has_value()) {
@@ -154,7 +153,7 @@ namespace compiler::ir {
         return {make_variable_name(variable.name, resolved.value())};
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::binary &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Binary &expr) {
         auto left = emit_expr(expr.left);
         auto right = emit_expr(expr.right);
         auto result = Operand{make_tmp_var()};
@@ -163,7 +162,7 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::unary &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Unary &expr) {
         auto operand = emit_expr(expr.value);
         auto result = Operand(make_tmp_var());
 
@@ -171,11 +170,11 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::grouping &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Grouping &expr) {
         return emit_expr(expr.expr);
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::assignment &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Assignment &expr) {
         auto value = emit_expr(expr.value);
         const auto resolved = resolver_.resolve(expr.name);
 
@@ -188,7 +187,7 @@ namespace compiler::ir {
         return destination;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::logical &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Logical &expr) {
         const std::string short_circuit_label = make_label("short_circuit");
         const std::string end_label = make_label("logical_end");
 
@@ -222,7 +221,7 @@ namespace compiler::ir {
         return result;
     }
 
-    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::call &expr) {
+    [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::Call &expr) {
         std::vector<Operand> arguments;
         for (const auto &arg: expr.arguments) {
             arguments.push_back(emit_expr(arg));
