@@ -4,9 +4,6 @@
 
 namespace compiler {
     template <typename InstrType>
-    class CFG;
-
-    template <typename InstrType>
     class Transform {
     public:
         Transform() = default;
