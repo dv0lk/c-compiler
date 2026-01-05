@@ -2,8 +2,10 @@
 Small toy C compiler with an LLVM like design, written in C++23. Implements a lexer, AST parser, IR emitter, x86 emitter, register allocation, and optimization passes.
 ## Build 
 ```commandline
+git clone --recurse-submodules https://github.com/pind0s/compiler-rewrite.git
+cd compiler-rewrite
 cmake -B build
-cmake --build build config Release
+cmake --build build --config Release
 ```
 ## Usage
 ```commandline
