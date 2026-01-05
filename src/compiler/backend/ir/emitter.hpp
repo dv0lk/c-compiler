@@ -55,6 +55,8 @@ namespace compiler::ir {
 
         void emit_stmt(const ast::stmt::Variable& variable);
 
+        void emit_stmt(const ast::stmt::ExpressionStmt& expr_stmt);
+
         Operand emit_expr(const ast::expr::expr_ptr& expr_var);
 
         Operand emit_expr(const ast::expr::Literal& literal);

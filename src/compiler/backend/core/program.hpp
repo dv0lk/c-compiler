@@ -1,5 +1,7 @@
 #pragma once
 #include "function.hpp"
+#include <set>
+#include <string>
 #include <vector>
 
 namespace compiler {
@@ -12,6 +14,14 @@ namespace compiler {
 
         void add_function(function_t&& function) {
             functions_.emplace_back(std::move(function));
+        }
+
+        void add_extern(const std::string& name) {
+            externs_.insert(name);
+        }
+
+        [[nodiscard]] const std::set<std::string>& externs() const {
+            return externs_;
         }
 
         [[nodiscard]] bool empty() const {
@@ -34,5 +44,6 @@ namespace compiler {
 
     private:
         std::vector<function_t> functions_;
+        std::set<std::string> externs_;
     };
 } // namespace compiler

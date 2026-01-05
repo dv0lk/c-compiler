@@ -131,7 +131,7 @@ struct std::formatter<compiler::x86::Mem> {
     }
 
     auto format(const compiler::x86::Mem& mem, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "qword [rbp{:+}]", mem.offset);
+        return std::format_to(ctx.out(), "qword ptr [rbp{:+}]", mem.offset);
     }
 };
 
@@ -318,6 +318,46 @@ struct std::formatter<compiler::x86::JmpCC> {
     }
 };
 
+// Helper to get 8-bit register name for setcc
+inline const char* get_reg8_name(compiler::x86::RegType reg) {
+    using enum compiler::x86::RegType;
+    switch (reg) {
+    case RAX:
+        return "al";
+    case RBX:
+        return "bl";
+    case RCX:
+        return "cl";
+    case RDX:
+        return "dl";
+    case RSI:
+        return "sil";
+    case RDI:
+        return "dil";
+    case RBP:
+        return "bpl";
+    case RSP:
+        return "spl";
+    case R8:
+        return "r8b";
+    case R9:
+        return "r9b";
+    case R10:
+        return "r10b";
+    case R11:
+        return "r11b";
+    case R12:
+        return "r12b";
+    case R13:
+        return "r13b";
+    case R14:
+        return "r14b";
+    case R15:
+        return "r15b";
+    }
+    return "??";
+}
+
 template <>
 struct std::formatter<compiler::x86::SetCC> {
     constexpr auto parse(std::format_parse_context& ctx) {
@@ -325,7 +365,16 @@ struct std::formatter<compiler::x86::SetCC> {
     }
 
     auto format(const compiler::x86::SetCC& setcc, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "set{} {}", setcc.condition, setcc.value);
+        // setcc only works with 8-bit operands
+        using namespace compiler::x86;
+        if (auto* reg = setcc.value.get_if<Register>()) {
+            return std::format_to(ctx.out(), "set{} {}", setcc.condition, get_reg8_name(reg->type_));
+        } else if (auto* mem = setcc.value.get_if<Mem>()) {
+            return std::format_to(ctx.out(), "set{} [rbp{:+}]", setcc.condition, mem->offset);
+        } else {
+            // Fallback for other types (shouldn't happen after register allocation)
+            return std::format_to(ctx.out(), "set{} {}", setcc.condition, setcc.value);
+        }
     }
 };
 
@@ -402,15 +451,9 @@ struct std::formatter<compiler::Function<compiler::x86::Instruction>> {
     }
 
     auto format(const compiler::Function<compiler::x86::Instruction>& fn, std::format_context& ctx) const {
-        auto out = std::format_to(ctx.out(), "fn {}(", fn.name());
+        auto out = std::format_to(ctx.out(), "{}", fn.name());
 
-        auto params = fn.params();
-        for (size_t i = 0; i < params.size(); ++i) {
-            if (i > 0)
-                out = std::format_to(out, ", ");
-            out = std::format_to(out, "{}", params[i]);
-        }
-        out = std::format_to(out, "):\n");
+        out = std::format_to(out, ":\n");
 
         for (const auto& instr : fn.instructions()) {
             out = std::format_to(out, "    {}\n", instr);
@@ -427,6 +470,14 @@ struct std::formatter<compiler::Program<compiler::x86::Instruction>> {
 
     auto format(const compiler::Program<compiler::x86::Instruction>& prog, std::format_context& ctx) const {
         auto out = ctx.out();
+
+        out = std::format_to(out, ".intel_syntax noprefix\n");
+        for (const auto& ext : prog.externs()) {
+            out = std::format_to(out, ".extern {}\n", ext);
+        }
+        out = std::format_to(out, ".globl main\n\n");
+        out = std::format_to(out, ".text\n\n");
+
         for (const auto& fn : prog.functions()) {
             out = std::format_to(out, "{}\n", fn);
         }

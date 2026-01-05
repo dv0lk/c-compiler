@@ -7,8 +7,8 @@
 #include "types/instruction.hpp"
 
 namespace compiler::x86 {
-    // calling convention register order
-    inline constexpr std::array ARG_REGISTERS = {RegType::RDI, RegType::RSI, RegType::RDX, RegType::RCX, RegType::R8, RegType::R9};
+    // windows x64 calling convention register order
+    inline constexpr std::array ARG_REGISTERS = {RegType::RCX, RegType::RDX, RegType::R8, RegType::R9};
 
     class Emitter {
     public:

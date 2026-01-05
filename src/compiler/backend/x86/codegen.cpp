@@ -4,6 +4,11 @@
 #include "codegen.hpp"
 
 compiler::Program<compiler::x86::Instruction> compiler::x86::Emitter::emit(const Program<ir::Instruction>& ir_program) {
+    // Copy externs from IR
+    for (const auto& ext : ir_program.externs()) {
+        x86_program_.add_extern(ext);
+    }
+
     for (const auto& function : ir_program.functions()) {
         assemble_function(function);
     }
@@ -22,21 +27,21 @@ compiler::x86::Operand compiler::x86::Emitter::convert_virt_reg(const ir::Operan
 void compiler::x86::Emitter::assemble_function(const Function<ir::Instruction>& function) {
     current_function_ = Function<Instruction>(function.name());
 
-    current_function_.emplace_back(Label(function.name()));
     const auto& params = function.params();
-    for (size_t i = 0; i < params.size(); ++i) {
-        if (i < ARG_REGISTERS.size()) {
-            current_function_.emplace_back(Mov(PseudoRegister(params[i]), Register(ARG_REGISTERS[i])));
-        } else {
-            int stack_offset = 16 + static_cast<int>((i - ARG_REGISTERS.size()) * 8);
-            current_function_.emplace_back(Mov(PseudoRegister(params[i]), Mem(stack_offset)));
-        }
+    for (size_t i = 0; i < params.size() && i < ARG_REGISTERS.size(); ++i) {
+        current_function_.emplace_back(Mov(PseudoRegister(params[i]), Register(ARG_REGISTERS[i])));
+    }
+
+    for (size_t i = ARG_REGISTERS.size(); i < params.size(); ++i) {
+        int stack_offset = 16 + (i - ARG_REGISTERS.size()) * 8;
+        current_function_.emplace_back(Mov(PseudoRegister(params[i]), Mem(stack_offset)));
     }
 
     for (const auto& instr : function.instructions()) {
         instr.visit([this](const auto& i) { assemble(i); });
     }
 
+    current_function_.params() = params;
     x86_program_.add_function(std::move(current_function_));
     current_function_ = {};
 }
@@ -138,10 +143,6 @@ void compiler::x86::Emitter::assemble(const ir::Copy& copy) {
     auto dest = convert_virt_reg(copy.destination);
     auto source = convert_virt_reg(copy.source);
 
-    if (dest == source) {
-        return;
-    }
-
     current_function_.emplace_back(Mov(dest, source));
 }
 
@@ -173,7 +174,7 @@ void compiler::x86::Emitter::assemble(const ir::FunctionCall& func_call) {
         current_function_.emplace_back(Mov(Register(ARG_REGISTERS[i]), convert_virt_reg(args[i])));
     }
 
-    current_function_.emplace_back(Call{LabelOp{func_call.function_name + "_entry"}});
+    current_function_.emplace_back(Call{LabelOp{func_call.function_name}});
 
     auto dest = convert_virt_reg(func_call.destination);
     current_function_.emplace_back(Mov(dest, Register(RegType::RAX)));

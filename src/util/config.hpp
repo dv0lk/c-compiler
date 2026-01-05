@@ -18,6 +18,8 @@ public:
     bool print_x86_no_opt = false;
     bool print_x86 = false;
 
+    bool link = false;
+
     void init(int argc, char* argv[]) {
         parser_.add_description("A simple C compiler");
         parser_.add_epilog("Example: compiler input.c --ir --x86");
@@ -33,6 +35,8 @@ public:
         parser_.add_argument("--x86").help("print x86 assembly after optimizations").flag();
 
         parser_.add_argument("--x86-no-opt").help("print x86 assembly before optimizations").flag();
+
+        parser_.add_argument("-l", "--link").help("link and produce executable").flag();
 
         parser_.add_argument("-o", "--output").help("output file path").default_value(std::string("output.asm")).nargs(1);
 
@@ -54,6 +58,8 @@ public:
 
         print_x86 = parser_.get<bool>("--x86");
         print_x86_no_opt = parser_.get<bool>("--x86-no-opt");
+
+        link = parser_.get<bool>("--link");
 
         output_file = parser_.get<std::string>("--output");
     }

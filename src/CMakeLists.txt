@@ -28,6 +28,7 @@ set(compiler-lib_SOURCES
 	"compiler/backend/transforms/manager.hpp"
 	"compiler/backend/transforms/passes/constant_fold.hpp"
 	"compiler/backend/transforms/passes/passes.hpp"
+	"compiler/backend/transforms/passes/peephole.hpp"
 	"compiler/backend/transforms/passes/utils.hpp"
 	"compiler/backend/transforms/transform.hpp"
 	"compiler/backend/x86/codegen.cpp"

@@ -5,6 +5,7 @@
 #include "backend/x86/codegen.hpp"
 #include "compiler/frontend/lexer/lexer.hpp"
 #include "compiler/frontend/parser/parser.hpp"
+#include "runtime.hpp"
 #include "util/config.hpp"
 #include "util/format/format.hpp"
 #include "x86/reg_alloc.hpp"
@@ -20,9 +21,9 @@ namespace compiler {
             std::println("{}", ir);
         }
 
-        TransformManager<ir::Instruction> tm;
-        tm.register_transform<transforms::ConstantFolding<ir::Instruction>>();
-        tm.run_on_program(ir);
+        TransformManager<ir::Instruction> ir_transforms;
+        ir_transforms.register_transform<transforms::ConstantFolding<ir::Instruction>>();
+        ir_transforms.run_on_program(ir);
 
         if (config.print_ir) {
             std::println("{}", ir);
@@ -31,18 +32,28 @@ namespace compiler {
         auto x86 = x86::Emitter::get_x86(ir);
 
         if (config.print_x86_no_opt) {
-            std::println("{}", ir);
+            std::println("{}", x86);
         }
 
         x86::RegisterAllocator allocator;
         allocator.run_on_program(x86);
 
+        TransformManager<x86::Instruction> x86_transforms;
+        x86_transforms.register_transform<transforms::Peephole>();
+        x86_transforms.run_on_program(x86);
+
         if (config.print_x86) {
             std::println("{}", x86);
         }
 
-        std::ofstream file ("output.asm");
+        std::ofstream file("output.s");
         std::println(file, "{}", x86);
+        file.close();
+        write_runtime("runtime.c");
+
+        if (config.link) {
+            std::system("clang output.s runtime.c -o result.exe");
+        }
     }
 } // namespace compiler
 

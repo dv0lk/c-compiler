@@ -195,7 +195,7 @@ namespace compiler {
             }
 
             std::vector<bb_t> blocks;
-            std::vector<size_t> sorted_leaders(leaders.begin(), leaders.end());
+            std::vector sorted_leaders(leaders.begin(), leaders.end());
             std::sort(sorted_leaders.begin(), sorted_leaders.end());
 
             for (size_t i = 0; i < sorted_leaders.size(); ++i) {

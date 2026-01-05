@@ -1,4 +1,6 @@
 #include "parser.hpp"
+
+#include <print>
 #include <stdexcept>
 
 namespace compiler::ast {
@@ -186,7 +188,9 @@ namespace compiler::ast {
             return parse_return();
         }
 
-        throw std::runtime_error("Unexpected statement");
+        auto expr = parse_expression();
+        consume(TokenType::Semicolon, "Expected ';' after expression");
+        return stmt::make_stmt<stmt::ExpressionStmt>(expr);
     }
 
     stmt::stmt_ptr Parser::parse_var_declaration() {
@@ -236,8 +240,13 @@ namespace compiler::ast {
         }
 
         consume(TokenType::RightParen, "Expected ')' after parameters");
-        consume(TokenType::LeftBrace, "Expected '{' before function body");
 
+        // Declaration without body = extern
+        if (match(TokenType::Semicolon)) {
+            return stmt::make_stmt<stmt::FunctionDecl>(return_type, std::move(function_name), params, std::nullopt);
+        }
+
+        consume(TokenType::LeftBrace, "Expected '{' before function body");
         auto body = parse_block();
 
         return stmt::make_stmt<stmt::FunctionDecl>(return_type, std::move(function_name), params, body);

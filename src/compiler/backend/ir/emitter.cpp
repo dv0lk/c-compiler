@@ -100,14 +100,20 @@ namespace compiler::ir {
     }
 
     void Emitter::emit_stmt(const ast::stmt::FunctionDecl& func) {
-        start_new_function(func.function_name + "_entry");
+        // Declaration without body = extern
+        if (!func.body.has_value()) {
+            program_.add_extern(func.function_name);
+            return;
+        }
+
+        start_new_function(func.function_name);
         resolver_.begin_scope();
 
         for (const auto& param : func.params) {
             emit_stmt(param);
         }
 
-        emit_stmt(func.body);
+        emit_stmt(func.body.value());
         finalize_current_function();
 
         resolver_.end_scope();
@@ -124,6 +130,10 @@ namespace compiler::ir {
         }
 
         throw std::runtime_error("Something went wrong");
+    }
+
+    void Emitter::emit_stmt(const ast::stmt::ExpressionStmt& expr_stmt) {
+        emit_expr(expr_stmt.expression);
     }
 
     [[nodiscard]] Operand Emitter::emit_expr(const ast::expr::expr_ptr& expr_var) {

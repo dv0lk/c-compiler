@@ -6,43 +6,43 @@
 #include "x86/types/instruction.hpp"
 
 namespace compiler {
-    template<typename InstrType>
+    template <typename InstrType>
     struct InstructionTrait;
 
-    template<>
+    template <>
     struct InstructionTrait<x86::Instruction> {
-        static bool is_label(const x86::Instruction &instr) {
+        static bool is_label(const x86::Instruction& instr) {
             return instr.holds<x86::Label>();
         }
 
-        static bool is_unconditional_jump(const x86::Instruction &instr) {
+        static bool is_unconditional_jump(const x86::Instruction& instr) {
             return instr.holds<x86::Jmp>();
         }
 
-        static bool is_conditional_jump(const x86::Instruction &instr) {
+        static bool is_conditional_jump(const x86::Instruction& instr) {
             return instr.holds<x86::JmpCC>();
         }
 
-        static bool is_return(const x86::Instruction &instr) {
+        static bool is_return(const x86::Instruction& instr) {
             return instr.holds<x86::Ret>();
         }
 
-        static bool is_terminator(const x86::Instruction &instr) {
+        static bool is_terminator(const x86::Instruction& instr) {
             return is_unconditional_jump(instr) || is_conditional_jump(instr) || is_return(instr);
         }
 
-        static std::string get_jump_target(const x86::Instruction &instr) {
-            if (auto *jmp = instr.get_if<x86::Jmp>()) {
+        static std::string get_jump_target(const x86::Instruction& instr) {
+            if (auto* jmp = instr.get_if<x86::Jmp>()) {
                 return jmp->target.name;
             }
-            if (auto *jcc = instr.get_if<x86::JmpCC>()) {
+            if (auto* jcc = instr.get_if<x86::JmpCC>()) {
                 return jcc->target.name;
             }
             throw std::runtime_error("Error: not a jump instruction");
         }
 
-        static std::string get_label_name(const x86::Instruction &instr) {
-            if (auto *label = instr.get_if<x86::Label>()) {
+        static std::string get_label_name(const x86::Instruction& instr) {
+            if (auto* label = instr.get_if<x86::Label>()) {
                 return label->target.name;
             }
             throw std::runtime_error("Error: not a label instruction");
@@ -64,12 +64,9 @@ namespace compiler {
 
                 if constexpr (std::is_same_v<T, x86::Mov>) {
                     add_if_pseudo(result, i.destination);
-                } else if constexpr (std::is_same_v<T, x86::Add> ||
-                                     std::is_same_v<T, x86::Sub> ||
-                                     std::is_same_v<T, x86::Imul>) {
+                } else if constexpr (std::is_same_v<T, x86::Add> || std::is_same_v<T, x86::Sub> || std::is_same_v<T, x86::Imul>) {
                     add_if_pseudo(result, i.destination);
-                } else if constexpr (std::is_same_v<T, x86::Neg> ||
-                                     std::is_same_v<T, x86::Not>) {
+                } else if constexpr (std::is_same_v<T, x86::Neg> || std::is_same_v<T, x86::Not>) {
                     add_if_pseudo(result, i.value);
                 } else if constexpr (std::is_same_v<T, x86::SetCC>) {
                     add_if_pseudo(result, i.value);
@@ -89,13 +86,10 @@ namespace compiler {
 
                 if constexpr (std::is_same_v<T, x86::Mov>) {
                     add_if_pseudo(result, i.source);
-                } else if constexpr (std::is_same_v<T, x86::Add> ||
-                                     std::is_same_v<T, x86::Sub> ||
-                                     std::is_same_v<T, x86::Imul>) {
+                } else if constexpr (std::is_same_v<T, x86::Add> || std::is_same_v<T, x86::Sub> || std::is_same_v<T, x86::Imul>) {
                     add_if_pseudo(result, i.destination);
                     add_if_pseudo(result, i.source);
-                } else if constexpr (std::is_same_v<T, x86::Neg> ||
-                                     std::is_same_v<T, x86::Not>) {
+                } else if constexpr (std::is_same_v<T, x86::Neg> || std::is_same_v<T, x86::Not>) {
                     add_if_pseudo(result, i.value);
                 } else if constexpr (std::is_same_v<T, x86::Cmp>) {
                     add_if_pseudo(result, i.destination);
@@ -112,4 +106,4 @@ namespace compiler {
             return result;
         }
     };
-}
+} // namespace compiler

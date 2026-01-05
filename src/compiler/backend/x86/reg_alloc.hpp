@@ -41,11 +41,6 @@ namespace compiler::x86 {
                         }
                     }
 
-                    // ensures that we add function params to the graph todo, this might be useless, double check
-                    for (const auto& use : traits::get_uses(instr)) {
-                        graph.add_node(use);
-                    }
-
                     ++instr_index;
                 }
             }
@@ -107,8 +102,10 @@ namespace compiler::x86 {
 
     class RegisterAllocator {
     public:
-        static constexpr std::array ALLOCATABLE_REGS = {RegType::RBX, RegType::RCX, RegType::RDX, RegType::RSI, RegType::RDI, RegType::R8, RegType::R9,
-                                                        RegType::R10, RegType::R11, RegType::R12, RegType::R13, RegType::R14, RegType::R15};
+        static constexpr std::array ALLOCATABLE_REGS = {RegType::RBX, RegType::RDI, RegType::RSI, RegType::R12, RegType::R13, RegType::R14, RegType::R15,
+                                                        RegType::RCX, RegType::RDX, RegType::R8,  RegType::R9,  RegType::R10, RegType::R11};
+
+        static constexpr std::array CALLEE_SAVED_REGS = {RegType::RBX, RegType::RDI, RegType::RSI, RegType::R12, RegType::R13, RegType::R14, RegType::R15};
 
         static constexpr size_t K = ALLOCATABLE_REGS.size();
 
@@ -139,7 +136,7 @@ namespace compiler::x86 {
         void reset() {
             allocation_.clear();
             used_callee_saved_.clear();
-            curr_stack_offset_ = -8;
+            curr_stack_offset_ = 8;
         }
 
         // chaitin briggs graph coloring algorithm
@@ -168,6 +165,11 @@ namespace compiler::x86 {
                 auto node = stack.top();
                 stack.pop();
 
+                // skip pre colored nodes
+                if (allocation_.contains(node)) {
+                    continue;
+                }
+
                 // gather all colors used by neighbors
                 std::unordered_set<RegType> used_regs;
                 for (const auto& neighbor : saved_graph.neighbors(node)) {
@@ -187,10 +189,12 @@ namespace compiler::x86 {
 
                 if (reg.has_value()) {
                     allocation_[node] = reg.value();
-                    used_callee_saved_.insert(reg.value());
+                    if (std::ranges::contains(CALLEE_SAVED_REGS, reg.value())) {
+                        used_callee_saved_.insert(reg.value());
+                    }
                 } else {
                     spilled_[node] = curr_stack_offset_;
-                    curr_stack_offset_ -= 8;
+                    curr_stack_offset_ += 8;
                 }
             }
         }
@@ -258,16 +262,21 @@ namespace compiler::x86 {
             new_instructions.emplace_back(Mov(Register(RegType::RBP), Register(RegType::RSP)));
 
             // push any registers we use to stack so we can restore them
-            if (function.name() != "main_entry") {
-                for (const auto reg : used_callee_saved_) {
-                    new_instructions.emplace_back(Push(Register(reg)));
-                }
+            for (const auto reg : used_callee_saved_) {
+                new_instructions.emplace_back(Push(Register(reg)));
             }
 
-            // allocate stack space for any spilled variables
-            if (curr_stack_offset_ + 8 < 0) {
-                new_instructions.emplace_back(Sub(Register(RegType::RSP), Imm(-curr_stack_offset_ - 8)));
+            // allocate stack space for spilled variables + 32 bytes shadow space (windows x64 ABI)
+            int total_space = curr_stack_offset_ + 32;
+
+            // Stack should be 16 bytes aligned (windows x64 ABI)
+            //+ 8 for return address
+            if ((total_space + 8) % 16 != 0) {
+                total_space += 8;
             }
+
+            curr_stack_offset_ = total_space;
+            new_instructions.emplace_back(Sub(Register(RegType::RSP), Imm(curr_stack_offset_)));
 
             auto& old_instr = function.instructions();
             for (auto& instr : old_instr) {
@@ -286,15 +295,11 @@ namespace compiler::x86 {
 
             for (auto& instr : old_instr) {
                 if (instr.holds<Ret>()) {
-                    if (curr_stack_offset_ + 8 < 0) {
-                        new_instructions.emplace_back(Add(Register(RegType::RSP), Imm(-curr_stack_offset_ - 8)));
-                    }
+                    new_instructions.emplace_back(Add(Register(RegType::RSP), Imm(curr_stack_offset_)));
 
                     // pop from the stack in reverse
-                    if (function.name() != "main_entry") { //todo idk, kinda scuffed, maybe rethink this, same thing in prologue
-                        for (auto reg : used_callee_saved_ | std::views::reverse) {
-                            new_instructions.emplace_back(Pop(Register(reg)));
-                        }
+                    for (auto reg : used_callee_saved_ | std::views::reverse) {
+                        new_instructions.emplace_back(Pop(Register(reg)));
                     }
 
                     new_instructions.emplace_back(Pop(Register(RegType::RBP)));
@@ -308,6 +313,6 @@ namespace compiler::x86 {
         std::unordered_map<std::string, RegType> allocation_;
         std::unordered_map<std::string, int> spilled_;
         std::set<RegType> used_callee_saved_;
-        int curr_stack_offset_ = -8;
+        int curr_stack_offset_ = 8;
     };
 } // namespace compiler::x86

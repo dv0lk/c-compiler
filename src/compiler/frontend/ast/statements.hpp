@@ -39,7 +39,7 @@ namespace compiler::ast::stmt {
         TokenType return_type;
         std::string function_name;
         std::vector<FunctionParam> params;
-        stmt_ptr body;
+        std::optional<stmt_ptr> body;  // nullopt = extern declaration
     };
 
     struct Block {
@@ -51,6 +51,10 @@ namespace compiler::ast::stmt {
         std::optional<expr::expr_ptr> initializer;
     };
 
+    struct ExpressionStmt {
+        expr::expr_ptr expression;
+    };
+
     struct ForLoop {
         Variable variable;
         expr::expr_ptr condition;
@@ -59,7 +63,7 @@ namespace compiler::ast::stmt {
 
     class stmt {
     private:
-        using variant_t = std::variant<Return, If, While, FunctionParam, FunctionDecl, Block, Variable>;
+        using variant_t = std::variant<Return, If, While, FunctionParam, FunctionDecl, Block, Variable, ExpressionStmt>;
         variant_t data_;
 
     public:
